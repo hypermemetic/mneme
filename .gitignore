@@ -1,0 +1,7 @@
+target/
+Cargo.lock
+.DS_Store
+
+# Program artifacts produced at runtime.
+# Comment this out to commit specific runs as fixtures.
+programs/

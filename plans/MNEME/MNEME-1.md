@@ -1,6 +1,6 @@
 ---
 id: MNEME-1
-title: "Mneme — Skill orchestration harness on Plexus"
+title: "Mneme — skill orchestration on Plexus RPC"
 status: Epic
 type: epic
 blocked_by: []
@@ -9,37 +9,35 @@ unlocks: []
 
 ## Goal
 
-A Plexus RPC server (forked from `plexus-substrate` as `mneme-substrate`) that turns the existing skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill is a typed Plexus activation. Each invocation spawns one or more Claude Code subagents (via the `claudecode` activation in `mneme-substrate`), records the full execution as a directory artifact, and returns a structured response a downstream caller can condition on.
+A Plexus RPC server that turns the skill suite (`ticketing`, `planning`, `security_review`, `strong_typing`, `forecast`) into platform services. Each skill is a typed activation. Each invocation spawns one or more Claude Code subagents, records the full execution as a directory artifact, and returns a structured response that downstream callers condition on.
 
-The harness is the runtime that makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
+Mneme makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
 
 ## Why
 
-The skills as written are documentation: agents read them and apply them by hand. That makes skill invocation unrepeatable, untyped, and uncomposable. The harness changes the substrate so:
+Skills as documentation are unrepeatable, untyped, uncomposable. Mneme changes that:
 
 1. **Skills are functions.** Typed inputs, typed outputs, callable over Plexus RPC.
-2. **Invocations are programs.** A directory under `programs/<id>/` is the residue of execution: manifest, artifact, trace, captured Claude sessions, child program subdirectories.
-3. **Multi-agent fanning is a primitive.** BLF multi-trial, multi-pass security review, parallel spikes — all done by one orchestration activation, not reinvented per skill.
-4. **Skills compose.** Skill A invokes skill B via the substrate's loopback MCP; the call is recorded as a child program. Composition is recursion at the protocol level.
+2. **Invocations are programs.** A directory under `programs/<id>/` is the residue of execution.
+3. **Multi-agent fanning is a primitive.** Multi-trial, multi-pass review, parallel spikes — done once, used everywhere.
+4. **Skills compose.** Skill A invokes skill B via loopback; the call is recorded as a child program. Composition is recursion at the protocol level.
 
-## Architecture (four layers)
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 3: Harness binary                                     │
-│   `mneme run <skill> [args...]` — spawns programs,          │
-│   returns artifact path + structured result                 │
+│ mneme CLI                                                   │
+│   `mneme run <skill> [args...]` / inspect / programs list   │
 ├─────────────────────────────────────────────────────────────┤
-│ Layer 2: Skill activations                                  │
-│   forecast, ticketing, planning, security_review, ...       │
-│   Each is a Plexus activation with TYPED methods            │
-│   that delegate to Layer 1                                  │
+│ Skill activations                                           │
+│   forecast / ticketing / planning / security_review /       │
+│   strong_typing                                             │
 ├─────────────────────────────────────────────────────────────┤
-│ Layer 1: Orchestration primitives (NEW)                     │
-│   `swarm` activation: trial / aggregate / sequential / race │
-│   `respond` tool: structured-output coercion via tool-use   │
+│ Orchestration                                               │
+│   swarm: trial / aggregate / sequential / race              │
+│   respond: structured-output via per-program loopback tools │
 ├─────────────────────────────────────────────────────────────┤
-│ Layer 0: claudecode activation (in mneme-substrate, inherited from upstream) │
+│ claudecode  (inherited from substrate)                      │
 │   Sessions, fork, loopback, persistence                     │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -137,6 +135,4 @@ Goal: every documented skill becomes a typed activation. Each port is independen
 
 ## Calibration
 
-This section gets a one-line note at the bottom when the last phase-1 ticket reaches `Complete`. Format: which `low`-confidence tickets needed contract revision after their spike, which `high`-confidence ones over-ran. Updates the priors for subsequent epic planning.
-
-(Currently empty — epic in flight.)
+When the last phase-1 ticket reaches `Complete`, append a one-line note at the bottom: which `low`-confidence tickets needed contract revision after their spike, which `high`-confidence ones over-ran. Updates the priors for subsequent epic planning.

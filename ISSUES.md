@@ -101,3 +101,21 @@ Append-only journal of issues discovered during work on mneme and adjacent skill
 - **Issue:** `serde_json` represents `NaN` as `null`, so `as_f64()` returns `None` and we hit `WrongType` before the explicit `is_finite()` guard. Both error variants are valid; the test allows either via `match` but the comment is slightly misleading about which path is taken
 - **Fix:** Logged-only; current test passes and the guard is real defense-in-depth even if rarely triggered
 - **Status:** logged-only (cosmetic)
+
+### LOG-15: `#[plexus_macros::method]` async fn returns Future<Output = Stream<...>>; tests need to .await the call before pinning
+- **Surfaced by:** Phase 3 forecast tests failed with E0599 (`method `next` exists for ... Pin<Box<impl Future<...>>>` but trait bounds not satisfied`)
+- **Issue:** The macro generates `pub async fn name(...) -> impl Stream<...>` which under the hood is `pub fn name(...) -> impl Future<Output = impl Stream<...>>`. Calling `Box::pin(activation.name(...))` pins the Future, not the Stream. Has to be `let stream = activation.name(...).await; let mut stream = Box::pin(stream); stream.next().await`
+- **Fix:** Added a `first_create_event` helper in forecast/activation.rs tests that does the `.await` then `Box::pin` then `next()`. Documented the pattern in the test module comment so future activation authors can copy it
+- **Status:** resolved-and-documented; this is the canonical way to test macro-generated activation methods
+
+### LOG-16: Cargo auto-discovers binaries from `src/bin/`; explicit `[[bin]]` not required
+- **Surfaced by:** Adding `src/bin/mneme.rs` and trying to add a `[[bin]]` entry to Cargo.toml; the file system was modified between read and write, but `cargo build --bin mneme` succeeded anyway
+- **Issue:** Not actually a bug; just useful operational knowledge. Cargo's default behavior includes anything in `src/bin/*.rs` as a binary target with the file's name minus `.rs`
+- **Fix:** Logged-only — useful for future skills/activations that want to add CLIs without ceremony
+- **Status:** logged-only (knowledge artifact)
+
+### LOG-17: Forecast skeleton doesn't take a SwarmRuntime; refactor deferred until dispatch strategy is picked
+- **Surfaced by:** Designing Phase 4b (MockSwarmRuntime + e2e pipeline test); needed to decide how the activation reaches the runtime
+- **Issue:** Three options for wiring the runtime to the activation: (a) Forecast holds `Arc<dyn SwarmRuntime>` field, (b) generic over context type like ClaudeCode does, (c) accessed via task-local or jsonrpsee Extensions. Each has implications for the dispatch interception strategy
+- **Fix:** Did NOT refactor Forecast. Built `DeterministicMockSwarmRuntime` separately and exercised the full pipeline directly in a unit test (`pipeline_e2e_program_trial_aggregate_calibrate_artifact`). Pipeline correctness is proven; the wiring decision can be made later without invalidating the proof
+- **Status:** open-by-design (waiting on dispatch interception decision; deliberately deferred)

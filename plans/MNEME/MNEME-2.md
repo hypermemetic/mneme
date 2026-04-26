@@ -10,7 +10,7 @@ confidence: high
 
 ## Problem
 
-The harness records every skill invocation as a directory artifact ("a program"). Without a fixed layout and manifest format, downstream tools (replay, audit, child-program linking, calibration loop) can't read program artifacts reliably. This ticket pins the contract.
+Mneme records every skill invocation as a directory artifact ("a program"). Without a fixed layout and manifest format, downstream tools (replay, audit, child-program linking, calibration loop) can't read program artifacts reliably. This ticket pins the contract.
 
 ## Context
 
@@ -23,7 +23,7 @@ The harness records every skill invocation as a directory artifact ("a program")
 The four-layer architecture (epic MNEME-1) treats programs as the residue of execution. Three downstream consumers depend on this contract being stable:
 
 1. **MNEME-7** (recording integration) writes the manifest and trace; the writer must know the format.
-2. **MNEME-8** (harness binary) reads the artifact to print results to stdout; needs to know where the artifact lives in the directory.
+2. **MNEME-8** (mneme CLI binary) reads the artifact to print results to stdout; needs to know where the artifact lives in the directory.
 3. **MNEME-15** (calibration loop) walks resolved programs to update Platt parameters; needs `manifest.json` to identify forecast programs and resolution dates.
 
 Splitting layout from implementation lets MNEME-3..6 proceed in parallel — they only need to know the *shape* of what gets recorded, not the writer.
@@ -57,7 +57,7 @@ The `programs/<program_id>/` directory MUST contain:
 | `status` | enum | `running` \| `completed` \| `failed` |
 | `artifact_schema_version` | string \| null | Set when artifact is written |
 | `substrate_version` | string | The mneme-substrate semver that ran the program |
-| `mneme_version` | string | The harness binary semver |
+| `mneme_version` | string | The mneme CLI binary semver |
 
 `trace.jsonl` line shape (one per `swarm.*` call):
 
@@ -78,12 +78,12 @@ The `programs/<program_id>/` directory MUST contain:
 |------|-----------|
 | Directory layout changes after phase 1, breaking MNEME-15 reads | Pin schema versions; readers must check version + handle older formats |
 | Trace becomes too large (a swarm.trial with N=8 trials × 50 events each = 400 entries) | trace.jsonl entries summarize only the swarm op; per-trial events live in sessions/ — kept separate |
-| Loopback child programs create unbounded recursion if a skill calls itself | Manifest carries depth field; harness refuses depth > 8 |
+| Loopback child programs create unbounded recursion if a skill calls itself | Manifest carries depth field; mneme refuses depth > 8 |
 
 ## What must NOT change
 
 - The four-layer architecture in MNEME-1's diagram. This ticket is contract-pinning, not architecture revision.
-- The pre-existing `claudecode.sessions_export` output format. The harness writes those files into `sessions/` unchanged.
+- The pre-existing `claudecode.sessions_export` output format. Mneme writes those files into `sessions/` unchanged.
 
 ## Acceptance criteria
 

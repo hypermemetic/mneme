@@ -10,7 +10,7 @@ confidence: medium
 
 ## Problem
 
-The `ticketing` skill exists as documentation (`hypermemetic/skills/skills/ticketing/SKILL.md`). Port it to a Plexus activation so callers can invoke `ticketing.write` from the harness or via loopback from another skill (e.g., `security_review` filing tickets for findings).
+The `ticketing` skill exists as documentation (`hypermemetic/skills/skills/ticketing/SKILL.md`). Port it to a Plexus activation so callers can invoke `ticketing.write` from mneme or via loopback from another skill (e.g., `security_review` filing tickets for findings).
 
 ## Context
 
@@ -47,7 +47,7 @@ Output (`WriteEvent::Completed`) includes the typed `Ticket`:
 | `meta_checks` | object (each meta-acceptance-criterion item: passed/failed) |
 | `file_path` | string (where the ticket would be written) |
 
-The activation does NOT write the file to disk on its own — the harness or caller decides. This keeps the activation pure (no FS side effects beyond program recording).
+The activation does NOT write the file to disk on its own — mneme or the caller decides. This keeps the activation pure (no FS side effects beyond program recording).
 
 ## Acceptance criteria
 

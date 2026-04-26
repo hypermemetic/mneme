@@ -57,7 +57,7 @@ MNEME-S01 (spike: loopback tool registration)
                  │             │
                  │             └──> MNEME-7 (program reification)
                  │                    │
-                 │                    └──> MNEME-8 (harness binary)
+                 │                    └──> MNEME-8 (mneme CLI binary)
                  │
                  └──> MNEME-S03 (spike: parallel-fork scaling bound)
 
@@ -95,7 +95,7 @@ Goal: prove the architecture by getting `forecast.update` to round-trip through 
 | MNEME-5 | `swarm.aggregate` — logit shrinkage + concat-evidence | high |
 | MNEME-6 | `forecast` skill activation (end-to-end) | low |
 | MNEME-7 | Program reification — recording & manifest writer | medium |
-| MNEME-8 | `mneme` harness binary | high |
+| MNEME-8 | `mneme` CLI binary | high |
 
 ### Phase 2 — Port the rest of the skill suite
 
@@ -131,7 +131,7 @@ Goal: every documented skill becomes a typed activation. Each port is independen
 - **Cross-substrate orchestration.** All subagents run in one substrate process. Distributed orchestration is post-MVP.
 - **Hot-reload of skill activations.** Skills ship baked-in via `include_str!` of their SKILL.md. A skill registry activation is a phase-3 idea, not phase-1.
 - **Full BLF Platt calibration in MVP.** Calibration data accumulates from real resolved forecasts; until ~10 are resolved, calibration is identity-with-shrinkage. MNEME-15 closes the loop later.
-- **A web UI.** Programs are filesystem artifacts; the harness is CLI-first. UI is a separate consumer.
+- **A web UI.** Programs are filesystem artifacts; mneme is CLI-first. UI is a separate consumer.
 
 ## Calibration
 

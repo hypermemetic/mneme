@@ -10,7 +10,7 @@ confidence: low
 
 ## Problem
 
-The four-layer architecture is unverified until one skill rides the full stack — Layer 0 (`claudecode`) → Layer 1 (`swarm.trial` + `swarm.aggregate` + `respond`) → Layer 2 (a typed skill activation) — and produces a structured result a user can act on. `forecast` is the smallest such skill and it directly exercises BLF, which is the harness's load-bearing inspiration.
+The architecture is unverified until one skill rides the full stack — `claudecode` → `swarm.trial` + `swarm.aggregate` + `respond` → a typed skill activation — and produces a structured result a user can act on. `forecast` is the smallest such skill, and it directly exercises BLF, which is mneme's load-bearing inspiration.
 
 ## Context
 
@@ -24,7 +24,7 @@ The four-layer architecture is unverified until one skill rides the full stack �
 
 1. It exercises every layer-1 primitive in one workflow (`respond` for typed output, `swarm.trial` for fan-out, `swarm.aggregate` with both `LogitShrinkage` and `ConcatEvidence`).
 2. The output shape is small and easy to inspect (`{probability, summary}`), so test assertions are mechanical.
-3. The BLF semantics are well-defined; we don't have to invent the skill's contract on top of inventing the harness.
+3. The BLF semantics are well-defined; we don't have to invent the skill's contract on top of inventing mneme.
 
 Confidence is `low` because this is the first skill end-to-end. Two failure modes are likely:
 - Layer 1's contract is subtly wrong for what a real skill needs, requiring revisions to MNEME-3..5.

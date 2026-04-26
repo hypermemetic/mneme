@@ -18,7 +18,7 @@ The strong-typing SKILL.md is the smallest and most mechanical of the skills —
 
 ## Evidence
 
-This is the simplest port. Confidence is `high` because (a) the skill output is mostly tabular, (b) no multi-trial aggregation is needed (one good pass suffices), (c) no file writes — the activation produces a proposal, the human applies it. It's a useful sanity check that simple skills don't get lost in the harness machinery.
+This is the simplest port. Confidence is `high` because (a) the skill output is mostly tabular, (b) no multi-trial aggregation is needed (one good pass suffices), (c) no file writes — the activation produces a proposal, the human applies it. It's a useful sanity check that simple skills don't get lost in mneme's machinery.
 
 ## Required behavior
 

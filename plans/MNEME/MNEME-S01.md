@@ -44,4 +44,4 @@ S-02-alt: drop the schema-enforcement requirement; rely on prompt-engineered JSO
 
 ## Fail → fallback
 
-If even prompt-engineered JSON fails reliably: structured outputs become best-effort with a typed-but-optional shape. Skill activations return `Result<T, ParseError>` and the harness retries up to a bound. Forecast confidence drops one bucket on parse retry.
+If even prompt-engineered JSON fails reliably: structured outputs become best-effort with a typed-but-optional shape. Skill activations return `Result<T, ParseError>` and mneme retries up to a bound. Forecast confidence drops one bucket on parse retry.

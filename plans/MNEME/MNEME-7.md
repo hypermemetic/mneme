@@ -33,7 +33,7 @@ Confidence is `medium`: the writer is straightforward, but integrating it cleanl
 
 ## Required behavior
 
-A `recorder` module in the harness:
+A `recorder` module in mneme:
 
 ```
 struct ProgramRecorder { /* program_id, root_path, seq_counter, ... */ }

@@ -1,6 +1,6 @@
 ---
 id: MNEME-8
-title: "`mneme` harness binary"
+title: "`mneme` CLI binary"
 status: Pending
 type: implementation
 blocked_by: [MNEME-7]
@@ -10,12 +10,12 @@ confidence: high
 
 ## Problem
 
-Layers 0–2 are reachable only via Plexus RPC (synapse, custom client). To exercise the harness from a shell, ad-hoc, or as part of a pipeline, the user needs a binary entry point that takes a skill invocation, runs it, and prints the artifact path + structured result.
+The substrate is reachable via Plexus RPC (synapse, custom client). To exercise mneme from a shell, ad-hoc, or as part of a pipeline, the user needs a binary entry point that takes a skill invocation, runs it, and prints the artifact path + structured result.
 
 ## Context
 
 - All four layers are functional after MNEME-7. What's missing is the user-facing veneer.
-- Synapse already provides a generic schema-driven CLI for any Plexus backend. The harness binary doesn't replace synapse; it bundles substrate + skills into a single process so users don't have to start the substrate separately.
+- Synapse already provides a generic schema-driven CLI for any Plexus backend. The `mneme` CLI doesn't replace synapse; it bundles substrate + skills into a single process so users don't have to start the substrate separately.
 - The binary's primary mode is one-shot: spawn substrate in-process, run one skill invocation, print result, exit.
 
 ## Evidence
@@ -73,7 +73,7 @@ mneme replay <program_id>         # post-MVP placeholder; emit "not yet implemen
 2. `mneme run forecast.update --program-id test --new-evidence ""` (against a previously-created forecast) returns exit 0, prints a program_id and an artifact JSON.
 3. `mneme list` prints a table including at minimum `forecast`, `swarm` (and any skills landed by phase 2).
 4. `mneme inspect <program_id>` against a real program prints both files prettily; against a non-existent id prints a clear error and exits non-zero.
-5. End-to-end test (shell script in `tests/e2e_harness.sh` or equivalent in Rust): `mneme run forecast.create ... && mneme run forecast.update ... && mneme inspect <id>`. All three succeed; the inspect output contains the expected fields.
+5. End-to-end test (shell script in `tests/e2e_mneme.sh` or equivalent in Rust): `mneme run forecast.create ... && mneme run forecast.update ... && mneme inspect <id>`. All three succeed; the inspect output contains the expected fields.
 6. `cargo build --release` succeeds; the binary is < 30MB stripped.
 7. `cargo build` and `cargo test` pass green for the `mneme` crate.
 

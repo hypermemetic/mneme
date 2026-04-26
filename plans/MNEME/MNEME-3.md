@@ -29,7 +29,7 @@ The choice is binary based on S01 evidence — both are implementable, but the t
 
 ## Required behavior
 
-A new module `mneme/src/respond.rs` (or wherever the harness lives) exposes:
+A new module under the `mneme/respond/` tree exposes:
 
 ```
 fn register_respond_tool(

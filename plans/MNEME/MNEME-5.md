@@ -90,7 +90,3 @@ Behavior:
 ## Completion
 
 Implementor runs `cargo test --lib swarm::aggregate`, all pass; status flips to `Complete` in the same commit as the code.
-
-## Implementation status (2026-04-26 autonomous session)
-
-**Done.** All four aggregation rules implemented and tested in `mneme-substrate/src/mneme/swarm/aggregate/`: `logit.rs` (BLF logit-shrinkage with input clamping), `concat.rs` (per-trial summary join), `majority.rs` (lex-tie-break majority), `severity.rs` (max along ladder). Dispatcher in `aggregate/mod.rs`. The math is exercised end-to-end by `pipeline_e2e_program_trial_aggregate_calibrate_artifact`. The aggregation runs as pure Rust (no Plexus method yet); when MNEME-4's swarm activation is wired into the substrate, `swarm.aggregate` will become the public Plexus method that wraps `aggregate::aggregate(...)`.

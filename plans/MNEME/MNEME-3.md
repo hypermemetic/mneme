@@ -77,7 +77,3 @@ The handle is auto-cleaned up when dropped (deregister the tool from the loopbac
 ## Completion
 
 Implementor runs `cargo test --test respond_basic respond_invalid respond_no_call`, all three pass, status flips to `Complete` in the same commit as the code.
-
-## Implementation status (2026-04-26 autonomous session)
-
-`RespondTool` descriptor type and the per-program tool name scheme are in `mneme-substrate/src/mneme/respond/mod.rs`. JSON Schema validator (type/required/range) in `mneme-substrate/src/mneme/respond/schema.rs`. The `ToolRegistry` (per-program registry with RAII handle) is in `mneme-substrate/src/mneme/runtime/tool_registry.rs`. **What's missing:** integration with the loopback MCP server's `tools/list` and `tools/call` handlers — gated on MNEME-S01 spike confirming the loopback supports schema-constrained tool registration.

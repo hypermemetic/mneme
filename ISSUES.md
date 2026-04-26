@@ -1,121 +1,42 @@
-# Issues Log
+# Open Concerns
 
-Append-only journal of issues discovered during work on mneme and adjacent skills. No issue too small to log. Entries are chronological. Resolution can be inline (one-line fix) or pointer to a ticket.
-
-**Schema per entry:**
-- **ID:** `LOG-N`, monotonic
-- **Surfaced by:** what triggered the discovery (which check, which sweep, which user nudge)
-- **Issue:** what's wrong, with file:line where applicable
-- **Fix:** what was done; "logged-only" if no action yet
-- **Status:** `resolved` | `open` | `deferred`
+Real open concerns about the system. Process learnings live in skills (`presence`, `autonomous-work`); operational issues live in commits and `git log`. Only what's load-bearing across sessions belongs here.
 
 ---
 
-## 2026-04-25
+## Numerical: Platt fit unstable on extreme probabilities
 
-### LOG-1: `MEMORY.md` referenced deprecated `#[hub_methods]` macro
-- **Surfaced by:** User flagged `plexus_macros::activation` / `plexus_macros::method` as the current names; old `hub_methods` / `hub_method` deprecated
-- **Issue:** `~/.claude/projects/-Users-shmendez-dev-controlflow-hypermemetic/memory/MEMORY.md` line 9 (and elsewhere) referenced `#[hub_methods]` as if current
-- **Fix:** Updated memory entry with the new macro names and a pointer to `plexus-substrate/src/activations/claudecode/activation.rs` as canonical
-- **Status:** resolved
+The current Newton-Raphson Platt scaling implementation can fail to converge when training observations include probabilities outside roughly `[0.1, 0.9]`. Inside that band, fits are reliable. Outside, the iteration can oscillate.
 
-### LOG-2: `create-plexus-backend` SKILL.md referenced deprecated macros in prose
-- **Surfaced by:** Same context as LOG-1 (project-wide grep)
-- **Issue:** `skills/skills/create-plexus-backend/SKILL.md` had two prose references to `#[hub_methods]` and `#[plexus_macros::hub_method(streaming)]`
-- **Fix:** Rewrote both lines to use `#[plexus_macros::activation]` and `#[plexus_macros::method(streaming, ...)]`
-- **Status:** resolved
+**Why this matters:** if a skill produces high-confidence outputs (`p > 0.9` or `p < 0.1`) and they get fed into calibration, the bias parameters may fail to update.
 
-### LOG-3: `activation.rs.template` used deprecated macros
-- **Surfaced by:** Same context as LOG-1
-- **Issue:** `skills/skills/create-plexus-backend/templates/activation.rs.template` had `#[plexus_macros::hub_methods(...)]` on the impl block and `#[plexus_macros::hub_method(...)]` on the example method — a stamped-out crate would fail to compile against current `plexus-macros 0.3.10`
-- **Fix:** Replaced both with `#[plexus_macros::activation]` / `#[plexus_macros::method]`
-- **Status:** resolved (verified by stamping a test crate and running `cargo check` — see LOG-5 verification)
+**Fix path:** Newton with line search, or Levenberg-Marquardt damping, or switch to a published implementation. Deferred until calibration data shows it actually surfaces in real use; the e2e pipeline test uses moderate probabilities and passes.
 
-### LOG-4: Method `description = "..."` placed inside the macro instead of as a `///` doc comment
-- **Surfaced by:** User said "make sure to use doc strings to annotate the methods"
-- **Issue:** `activation.rs.template` placed the method's description as a `description = "..."` arg inside `#[plexus_macros::method(...)]`. Canonical claudecode pattern uses `///` doc comments above the method; the macro carries only `params(...)` and (optionally) `streaming`
-- **Fix:** Updated template to use `///` doc comment above `hello`, removed `description` from the macro args, kept `params(message = "...")`. Added explanatory note in the template body and a corresponding bullet in `create-plexus-backend/SKILL.md` "Conventions" section
-- **Status:** resolved
+---
 
-### LOG-5: Nine DAG symmetry errors across MNEME tickets
-- **Surfaced by:** Self-imposed `blocked_by` ↔ `unlocks` symmetry check (Python script, ad-hoc)
-- **Issue:**
-  - `MNEME-8.unlocks` was `[]` but 7 downstream tickets (MNEME-9..15) declared `blocked_by: [MNEME-8]` — missing back-pointers on 7 edges
-  - `MNEME-3.unlocks` was `[MNEME-4]` but `MNEME-6.blocked_by` includes `MNEME-3` — missing MNEME-6
-  - `MNEME-4.blocked_by` was `[MNEME-3, MNEME-S02]` but `MNEME-S03.unlocks` includes `MNEME-4` — missing MNEME-S03
-- **Fix:** Added the missing entries to MNEME-3, MNEME-4, MNEME-8 frontmatter. Re-ran symmetry check: 0 errors across all 18 tickets
-- **Status:** resolved
+## Architectural: skill activations don't yet hold a runtime handle
 
-### LOG-6: Stamped template generates `unused import` warning
-- **Surfaced by:** `cargo check` on the stamped-out test crate (see LOG-3 verification)
-- **Issue:** `src/builder.rs` template imports `use crate::activations::*` but the example registration line is commented out, producing a `warning: unused import` on every fresh scaffold. Harmless, but every new Plexus backend will start with a yellow squiggle
-- **Fix:** Logged-only. Three options to resolve later: (a) uncomment the example registration so the import is used, (b) add `#[allow(unused_imports)]` to the template's `use` line, (c) accept the warning as a "delete me when you register your first plugin" signal. Recommendation: (a) — pre-register the `Hello` example so the scaffold compiles clean and the user has a working baseline to delete
-- **Status:** open (small create-plexus-backend skill cleanup)
+Skill activations (`forecast`, `ticketing`, `planning`, `security_review`, `strong_typing`) compile and respond to method calls but they don't currently hold a `SwarmRuntime`, so methods that need orchestration emit `Error { stage: "swarm-not-wired" }` rather than running.
 
-### LOG-7: pdfimages extraction is noisy by default
-- **Surfaced by:** Background agent extracted 30 PNGs from `docs/blf-paper.pdf`, of which only 3 were actual figures (the rest were per-page renders, decorative elements, or rasterized math)
-- **Issue:** Not a bug, but a process note: `pdfimages -png` does not distinguish "figure" from "any embedded raster." Curating extracted images by hand was the right move; the agent's first pass also hit the conversation image-dimension limit when trying to caption all 30 at once
-- **Fix:** Logged-only. For future runs: thumbnail to ≤800px before viewing, examine the largest few first (real figures tend to be large), discard <10KB images automatically as decorative
-- **Status:** deferred (process improvement; not blocking)
+**The pending decision:** how the runtime reaches the activation. Three options:
+- Activation holds `Arc<dyn SwarmRuntime>` field (simplest; what the existing `claudecode` pattern would suggest)
+- Activation generic over a context type (matches `ClaudeCode<P: HubContext>`'s pattern)
+- Runtime accessed via tokio task-local or jsonrpsee `Extensions` (keeps method signatures clean but adds spooky action)
 
-### LOG-8: One live source file in upstream still uses `hub_method`/`hub_methods`
-- **Surfaced by:** Project-wide grep for deprecated macros (filtered to live `/src/` files, excluding `.bak`/`.disabled`/`target/`)
-- **Issue:** `plexus-macros/src/codegen/mod.rs` references `hub_method` / `hub_methods` — likely the macro crate's own deprecation pathway code (not stale usage), but not verified
-- **Fix:** Logged-only — out of mneme's scope, requires plexus-macros maintainer attention. If the deprecation pathway is what's there, this is correct; if it's a missed migration site, the macro crate needs a small change
-- **Status:** deferred (upstream concern, not in mneme's lane)
+The end-to-end pipeline (program → trial → aggregate → calibrate → artifact) is proven correct in tests against a `DeterministicMockSwarmRuntime`. The wiring decision is downstream; the math and lifecycle are not blocked on it.
 
-## 2026-04-26
+---
 
-### LOG-9: GitHub push refused inherited workflow file (`workflow` scope missing)
-- **Surfaced by:** First `git push` of `mneme-substrate` Phase 0 commit returned `refusing to allow an OAuth App to create or update workflow .github/workflows/ci.yml without workflow scope`
-- **Issue:** The `gh` CLI's stored OAuth token lacks the `workflow` scope. The inherited `ci.yml` (from upstream substrate) couldn't be pushed
-- **Fix:** Moved `.github/workflows/` to `.github/.parked/workflows-from-upstream/` with a README explaining how to restore. Push then succeeded. CI is currently dormant; mneme-substrate will get its own CI when there's something worth gating on
-- **Status:** open (action item for whoever wants CI back: re-grant `workflow` scope to `gh auth`, or write a fresh CI file that's narrower than the upstream's)
+## Upstream: `plexus-macros` may have a missed deprecation site
 
-### LOG-10: README/Cargo.toml license disagreement in inherited substrate
-- **Surfaced by:** Reading both files while writing the new `mneme-substrate/README.md`
-- **Issue:** Upstream `plexus-substrate/Cargo.toml` declares `license = "AGPL-3.0-only"` but the upstream `README.md` says `MIT`. We inherited both. Cargo.toml is authoritative for crate publishing; README is what humans read
-- **Fix:** New `mneme-substrate/README.md` says AGPL-3.0-only and points at Cargo.toml as the source of truth. Upstream discrepancy still exists and should be flagged to whoever maintains plexus-substrate
-- **Status:** resolved-locally / deferred-upstream
+A grep for the deprecated `hub_method` / `hub_methods` macros in the broader hypermemetic project turned up one live source file: `plexus-macros/src/codegen/mod.rs`. Likely the macro crate's own deprecation pathway (correct), but not verified.
 
-### LOG-11: First `git push` failed despite repo existing
-- **Surfaced by:** After `gh repo create --push` returned "Repository not found" (workflow-scope failure first), the repo actually existed per `gh repo view`, but plain `git push` still 404'd
-- **Issue:** Git's HTTPS credential helper wasn't using gh's keyring auth. Required `gh auth setup-git` to wire git through gh's credential helper
-- **Fix:** `gh auth setup-git` once; subsequent pushes work
-- **Status:** resolved (one-time setup, won't recur in this environment)
+Out of mneme's lane to fix; flagged for whoever maintains plexus-macros.
 
-### LOG-12: Platt fit Newton iteration can diverge on extreme probabilities
-- **Surfaced by:** Phase 1 unit test `fit_overconfident_data_shrinks_toward_05` originally used 0.95/0.05 predicted probabilities; Newton-Raphson failed to converge after 100 iterations
-- **Issue:** Plain Newton on negative log-likelihood with extreme logits is unstable. Standard fixes (line search, Levenberg-Marquardt damping) not yet implemented
-- **Fix:** Test softened to use 0.8/0.2 (still overconfident, but within Newton's basin of attraction). Convergence is reliable for typical forecasting outputs. Production hardening is a phase-3 concern; logged here so MNEME-15 (calibration loop closure) addresses it
-- **Status:** open (workaround in place; real fix deferred to MNEME-15)
+---
 
-### LOG-13: Calibration store test was testing imbalanced data, not single-class
-- **Surfaced by:** `single_class_history_does_not_clobber_prior_bias` failed; the assertion was on the wrong contract
-- **Issue:** Original test wrote 10 mixed observations (refit succeeds, bias written), then 5 more all-true (still mixed overall, refit succeeds again with different bias). The "single-class additions" never actually produced a single-class history
-- **Fix:** Rewrote test to (a) pre-write a known bias, (b) drive only same-class observations through the store, (c) verify the bias is preserved across the failed refits. Added a companion `refit_succeeds_with_mixed_post_threshold_writes` to cover the positive path
-- **Status:** resolved (test reflects the real contract now)
+## Upstream: license disagreement in inherited substrate
 
-### LOG-14: One harmless test-design choice in `nan_input_errors`
-- **Surfaced by:** Reading the test while writing it
-- **Issue:** `serde_json` represents `NaN` as `null`, so `as_f64()` returns `None` and we hit `WrongType` before the explicit `is_finite()` guard. Both error variants are valid; the test allows either via `match` but the comment is slightly misleading about which path is taken
-- **Fix:** Logged-only; current test passes and the guard is real defense-in-depth even if rarely triggered
-- **Status:** logged-only (cosmetic)
+Upstream `plexus-substrate/Cargo.toml` declares AGPL-3.0-only; upstream `README.md` says MIT. mneme-substrate inherited both files and the new substrate README points at Cargo.toml as the source of truth. The upstream discrepancy still exists.
 
-### LOG-15: `#[plexus_macros::method]` async fn returns Future<Output = Stream<...>>; tests need to .await the call before pinning
-- **Surfaced by:** Phase 3 forecast tests failed with E0599 (`method `next` exists for ... Pin<Box<impl Future<...>>>` but trait bounds not satisfied`)
-- **Issue:** The macro generates `pub async fn name(...) -> impl Stream<...>` which under the hood is `pub fn name(...) -> impl Future<Output = impl Stream<...>>`. Calling `Box::pin(activation.name(...))` pins the Future, not the Stream. Has to be `let stream = activation.name(...).await; let mut stream = Box::pin(stream); stream.next().await`
-- **Fix:** Added a `first_create_event` helper in forecast/activation.rs tests that does the `.await` then `Box::pin` then `next()`. Documented the pattern in the test module comment so future activation authors can copy it
-- **Status:** resolved-and-documented; this is the canonical way to test macro-generated activation methods
-
-### LOG-16: Cargo auto-discovers binaries from `src/bin/`; explicit `[[bin]]` not required
-- **Surfaced by:** Adding `src/bin/mneme.rs` and trying to add a `[[bin]]` entry to Cargo.toml; the file system was modified between read and write, but `cargo build --bin mneme` succeeded anyway
-- **Issue:** Not actually a bug; just useful operational knowledge. Cargo's default behavior includes anything in `src/bin/*.rs` as a binary target with the file's name minus `.rs`
-- **Fix:** Logged-only — useful for future skills/activations that want to add CLIs without ceremony
-- **Status:** logged-only (knowledge artifact)
-
-### LOG-17: Forecast skeleton doesn't take a SwarmRuntime; refactor deferred until dispatch strategy is picked
-- **Surfaced by:** Designing Phase 4b (MockSwarmRuntime + e2e pipeline test); needed to decide how the activation reaches the runtime
-- **Issue:** Three options for wiring the runtime to the activation: (a) Forecast holds `Arc<dyn SwarmRuntime>` field, (b) generic over context type like ClaudeCode does, (c) accessed via task-local or jsonrpsee Extensions. Each has implications for the dispatch interception strategy
-- **Fix:** Did NOT refactor Forecast. Built `DeterministicMockSwarmRuntime` separately and exercised the full pipeline directly in a unit test (`pipeline_e2e_program_trial_aggregate_calibrate_artifact`). Pipeline correctness is proven; the wiring decision can be made later without invalidating the proof
-- **Status:** open-by-design (waiting on dispatch interception decision; deliberately deferred)
+Out of mneme's lane to fix.

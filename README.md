@@ -2,147 +2,91 @@
 
 > μνήμη — *memory*; the substrate that carries belief forward across agents.
 
-Mneme is a Plexus RPC server (a fork of `plexus-substrate`) that turns the hypermemetic skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill is a typed Plexus activation. Each invocation spawns one or more Claude Code subagents via the `claudecode` activation, records the full execution as a directory artifact, and returns a structured response that downstream callers can condition on.
+Mneme makes one principle operational: **every artifact in an agent pipeline carries forward both its value AND the evidence that justifies it.** The next agent in the chain conditions on the evidence, not just the value, so when a contract is questioned three steps later the conversation starts from recorded reasoning rather than restarting cold.
 
-Mneme is the runtime that makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
+## The primitive
 
-## What it gives you
+A belief in mneme is `(value, evidence_summary)`. The summary is the sufficient statistic — the prose justification a downstream consumer reads to understand *why* this value and not another. Forecasts carry probabilities and reasoning. Tickets carry contracts and rationale. Security findings carry severities and exploit chains. The shape is shared; the discipline is shared.
 
-```
-$ mneme run forecast.update --program-id Q-001 --new-evidence "BTC at $95k"
-program_id: 8c1f3e0a-...
-artifact:   programs/8c1f3e0a-.../artifact.json
-{
-  "probability": 0.34,
-  "summary": "Three trials disagreed on whether BTC's recent rally is durable...",
-  "confidence": "multi-trial",
-  "n_trials": 3,
-  "prior_used": { "probability": 0.41, "summary": "..." }
-}
-```
+This generalizes BLF (Bayesian Linguistic Forecaster, [Murphy 2026](https://arxiv.org/abs/2604.18576)) from binary forecasting to every kind of agent artifact.
 
-The `programs/<id>/` directory IS the run: manifest, artifact, JSONL trace, captured Claude sessions, child program subdirectories. Replay, audit, and calibration all read this directory.
-
-Synapse works against the same backend with no extra wiring:
-
-```
-$ synapse -P 4444 forecast update --program-id Q-001 --new-evidence "BTC at $95k"
-```
-
-## This repo's role
-
-This repository (`mneme/`) is the **planning and design** repo: tickets, architecture decisions, the BLF paper figures, the issues log. The implementation lives in a sibling repo (`mneme-substrate/`) that was forked from `plexus-substrate` and evolves toward the architecture this repo's tickets describe.
-
-| Repo | Role |
-|------|------|
-| `mneme/` (this repo) | Planning artifacts: 18 tickets, ISSUES log, BLF paper + figures, architecture |
-| `mneme-substrate/` (sibling) | Implementation: forked Plexus RPC server with the `claudecode`, `swarm`, and skill activations |
-
-Keeping them split lets the planning artifacts evolve at a different pace from the code, and lets the implementation get aggressive with refactors without churning the design history.
-
-## Inspiration
-
-Mneme operationalizes the framework from:
-
-> **Agentic Forecasting using Sequential Bayesian Updating of Linguistic Beliefs**
-> Kevin Murphy, arXiv [2604.18576](https://arxiv.org/abs/2604.18576), April 2026
-> [(local copy)](docs/blf-paper.pdf)
-
-The paper introduces a binary-forecasting agent (BLF — Bayesian Linguistic Forecaster) whose belief state isn't just a probability but a `(probability, evidence_summary)` pair that survives between updates. Multi-trial aggregation in logit space and Platt-scaling calibration produce a system that beats GPT-5, Grok 4.20, and Foresight-32B on ForecastBench backtests.
-
-The mneme generalization: every artifact in an agent pipeline — tickets, plans, security findings, code reviews — should carry forward both its value AND the evidence justifying it. Multi-trial aggregation and post-hoc calibration are the same primitives across all of them.
-
-### Belief evolution under multi-trial
+### Belief evolves under multi-trial
 
 ![Five trials' belief probabilities over agent steps for a binary question, with the aggregated mean.](docs/figures/fig01-belief-evolution.png)
 
-*Each trial is an independent reasoning path; aggregation in logit space produces the mean line. The same primitive in mneme is `swarm.trial(n=5) → swarm.aggregate(LogitShrinkage)`.*
+*Each trial is an independent reasoning path. Aggregation in logit space produces the consensus.*
 
-### Why multiple trials beat single trials
+### More trials, better calibration
 
-![Four-panel ablation: as the number of forecasts averaged increases, Metaculus Baseline Score, Brier Score, and Brier Index all improve; LOO-shrinkage (blue) consistently beats plain mean (gray).](docs/figures/fig02-trial-aggregation.png)
+![Four-panel ablation: as the number of forecasts averaged increases, scoring metrics improve; LOO-shrinkage consistently beats plain mean.](docs/figures/fig02-trial-aggregation.png)
 
-*The ntrials axis is the BLF multi-trial parameter — `swarm.trial`'s `n`. The LOO-shrinkage curve is what `swarm.aggregate` with `LogitShrinkage` reproduces.*
+*The principle is shared across artifact types: independent trials + structured aggregation produces calibrated outputs, single-pass guesses don't.*
 
-### Where BLF sits on the leaderboard
+### The frontier mneme inherits
 
-![Forecasting leaderboard: Superforecaster median forecast, Cassi ensemble, Gemini-3-Pro-Preview, Grok 4.20, GPT-5, Foresight-32B — with Dataset, Market, and Overall scores plus 95% CIs.](docs/figures/fig03-leaderboard.png)
+![Forecasting leaderboard showing Superforecaster median, Cassi ensemble, Gemini-3-Pro-Preview, Grok 4.20, GPT-5, Foresight-32B with Dataset, Market, and Overall scores plus 95% CIs.](docs/figures/fig03-leaderboard.png)
 
-*The competitive frontier mneme inherits. Mneme's job is to make these techniques composable and re-usable across skills, not just forecasting.*
+*Mneme makes these techniques composable across skills, not just forecasting.*
+
+## Programs
+
+Every invocation produces a **program** — a directory containing the manifest, the typed artifact, a JSONL trace of orchestration calls, the captured Claude sessions, and any child programs spawned via loopback. The directory IS the run. Replay reads it. Audit reads it. Calibration reads it.
+
+```
+programs/<program_id>/
+  manifest.json          metadata + lifecycle status
+  artifact.json          the typed return value
+  trace.jsonl            one line per orchestration call
+  sessions/              captured claudecode sessions
+  skills/<child_id>/     loopback child programs (recursive)
+```
+
+## Skills
+
+Skills are the units of capability. Each one is a typed Plexus activation with a documented contract:
+
+| Skill | What it does |
+|-------|--------------|
+| `forecast` | Binary forecasting with multi-trial aggregation and post-hoc calibration |
+| `ticketing` | Writes TDD tickets that pass the two-stranger test |
+| `planning` | Breaks goals into dependency DAGs of tickets, with spikes for unknowns |
+| `security_review` | Structured SOC2 audit with multi-trial severity calibration |
+| `strong_typing` | Proposes newtypes for distinct domain identifiers |
+
+Each skill consumes evidence, produces evidence, and composes with the others through normal Rust function calls inside the substrate (Plexus is the protocol for outside callers; internal composition is direct).
 
 ## Architecture
 
-mneme-substrate is **one Rust binary**. Plexus RPC is the boundary protocol exposed to outside callers (synapse, MCP, WS). Inside the binary, modules compose via normal Rust function calls — Plexus is not the internal calling convention.
+Mneme is a Plexus RPC server. Outside callers (synapse, MCP clients, WS) talk to it as a normal Plexus backend. Inside, modules compose via Rust:
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ External callers (synapse, MCP, WS clients)                  │
-└────────────────────────┬─────────────────────────────────────┘
-                         │ Plexus RPC over WS / stdio / HTTP
-┌────────────────────────▼─────────────────────────────────────┐
-│ mneme-substrate (single binary)                              │
-│                                                              │
-│  Skill activations  ── forecast / ticketing / planning /     │
-│       │                 security_review / strong_typing      │
-│       │  (Rust calls, not RPC)                               │
-│       ▼                                                      │
-│  Orchestration      ── swarm.trial / aggregate /             │
-│       │                 sequential / race                    │
-│       │  (Rust calls)                                        │
-│       ▼                                                      │
-│  claudecode         ── sessions, fork, loopback, persistence │
-│       ▲                                                      │
-│       │ MCP loopback (real boundary — Claude inside session  │
-│       │              calls back via per-program tool reg)    │
-│  Substrate runtime  ── program lifecycle (wraps dispatch)    │
-│                        per-program tool registry             │
-│                        session attribution                   │
-│                        calibration store                     │
-│                        schema enforcement on returns         │
-└──────────────────────────────────────────────────────────────┘
+External callers
+       │
+       ▼  Plexus RPC over WS / stdio / MCP-HTTP
+┌─────────────────────────────────────────┐
+│ Skill activations  ── forecast / ticketing / planning / ...
+│       │              (Rust calls, not RPC)
+│       ▼
+│ Orchestration     ── swarm.trial / aggregate / sequential / race
+│       │
+│       ▼
+│ Claude sessions   ── claudecode (inherited from substrate)
+│
+│ Substrate runtime ── program lifecycle, per-program tool
+│                       registry, session attribution,
+│                       calibration store
+└─────────────────────────────────────────┘
 ```
 
-Key principles:
+Architecture detail: [`mneme-substrate/docs/architecture/`](https://github.com/hypermemetic/mneme-substrate/tree/master/docs/architecture).
 
-- **One dispatch path = one observability surface.** Skill A calling skill B in-process goes through Rust, not RPC. The substrate's program-lifecycle middleware wraps the *external* dispatch boundary so every top-level call becomes a recorded program; internal composition is recorded by the substrate's awareness of swarm calls.
-- **Programs are substrate state, not Plexus state.** Plexus method shapes are unchanged from upstream; the substrate just brackets each top-level call with program open/close.
-- **Loopback is the only place we cross a serialization boundary internally.** When Claude *inside* a session calls back via MCP, that's a real principal change and the per-program `respond` tool registry handles it.
+## Repos
 
-## Status
+| | |
+|---|---|
+| [mneme](https://github.com/hypermemetic/mneme) | This repo: design, tickets, BLF paper, issues |
+| [mneme-substrate](https://github.com/hypermemetic/mneme-substrate) | The Plexus RPC server itself |
 
-In-flight. The plans are written; implementation is starting.
+## Methodology
 
-| Phase | Goal | Status |
-|-------|------|--------|
-| 0 | Fork plexus-substrate → mneme-substrate (sibling repo); structural changes only, no behavior change | In progress |
-| 1 | Substrate-side modules: program lifecycle, swarm primitives, aggregation math, respond protocol, calibration | Tickets pending |
-| 2 | Forecast skill end-to-end (the validation skill) | Ticket pending |
-| 3 | Port `ticketing`, `planning`, `security_review`, `strong_typing` as activations | Tickets pending |
-| 4 | Sequential / race / calibration loop closure | Tickets pending (deferred until usage justifies) |
-
-All tickets currently sit at `status: Pending`. Per the methodology, tickets need explicit human approval before flipping to `Ready` for implementation. The 18 tickets are in [`plans/MNEME/`](plans/MNEME/); the epic overview is [`MNEME-1.md`](plans/MNEME/MNEME-1.md).
-
-## Issues log
-
-[`ISSUES.md`](ISSUES.md) is the append-only journal of issues discovered during work on mneme and adjacent skills. No issue too small to log. Discipline: every check that surfaces something gets an entry, including warnings that would normally be waved through. A logged-and-deferred issue is fine; an unlogged one rots in conversation history.
-
-## Layout
-
-```
-mneme/
-  README.md
-  ISSUES.md            append-only issues journal
-  plans/MNEME/
-    MNEME-1.md         epic overview (architecture + DAG + phases)
-    MNEME-S01..S03.md  spikes (3)
-    MNEME-2..15.md     implementation tickets (14)
-  docs/
-    blf-paper.pdf      local copy of the BLF paper
-    figures/           three curated figures (belief evolution, trial agg, leaderboard)
-```
-
-## Methodology pointers
-
-The skill suite mneme orchestrates lives at `~/dev/controlflow/hypermemetic/skills/skills/`. The methodology that informs ticket structure (the "two-stranger test", the `## Evidence` section, the `confidence:` frontmatter, the spikes-as-evidence-sources principle, the bilateral `presence` working posture) lives in those skills' `SKILL.md` files and in `~/CLAUDE.md`.
-
-This repo's tickets exemplify the discipline they describe — every implementation ticket carries a real `## Evidence` section, every spike has a binary pass condition plus structured evidence to record, and every confidence value is set deliberately so post-MVP calibration has data to learn from.
+Skills are documented at `~/dev/controlflow/hypermemetic/skills/skills/`. The discipline that informs ticket structure (the two-stranger test, the `## Evidence` section, spikes-as-evidence-sources) and the working postures (`presence` for collaboration, `autonomous-work` for solo execution) live there.

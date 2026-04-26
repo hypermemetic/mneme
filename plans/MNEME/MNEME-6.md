@@ -109,13 +109,3 @@ Internal flow for `update`:
 ## Completion
 
 Implementor runs `cargo test --test forecast_e2e forecast_resolvability forecast_update_chain`, all pass; status flips to `Complete` in the same commit as the code. Calibration history file `programs/_calibration/history.jsonl` initialized empty in the same commit.
-
-## Implementation status (2026-04-26 autonomous session)
-
-Skeleton in `mneme-substrate/src/activations/forecast/`. Types (`ForecastState`, `ForecastConfidence`, `PriorRef`, `TrialResponse`, `CreateEvent`, `UpdateEvent`, `ResolveEvent`) all `Serialize + Deserialize + JsonSchema` and tested. Activation registered as `forecast` namespace via `#[plexus_macros::activation]`. Three methods exist with full signatures:
-
-- `create` — resolvability gate (deadline parsing, future check, trial-count validation) WORKS end-to-end. Emits `Created { program_id, question, deadline }` on success or `ResolvabilityFailed` / `Error`. Doesn't yet open a real Program directory; that needs the runtime field decision (LOG-17 in ISSUES.md).
-- `update` — emits `Error { stage: "swarm-not-wired" }`. Body is intentionally a stub until SwarmRuntime is wired (MNEME-4 follow-up).
-- `resolve` — emits `Error` with a "store-not-wired" message. Body waits on CalibrationStore being threaded into the activation.
-
-The pipeline this skill DEPENDS on (program lifecycle + swarm.trial mock + aggregate + calibration) is fully proven in the e2e test. Once the SwarmRuntime is wired, `update`'s body becomes a 30-line orchestration call.

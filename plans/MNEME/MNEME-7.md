@@ -21,7 +21,7 @@ The MVP works only if every skill invocation produces the program directory cont
 
 ## Evidence
 
-Recording lives at the orchestration layer (Layer 1) rather than per-skill (Layer 2) because:
+Recording lives at the orchestration layer (inside `swarm`) rather than per-skill because:
 
 1. Every skill uses `swarm.*` — instrumenting once covers all skills.
 2. Skills shouldn't have to know about the program directory format; they get a `program_id` they pass to swarm calls and the recording happens transparently.

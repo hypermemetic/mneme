@@ -27,7 +27,7 @@ The architecture is unverified until one skill rides the full stack — `claudec
 3. The BLF semantics are well-defined; we don't have to invent the skill's contract on top of inventing mneme.
 
 Confidence is `low` because this is the first skill end-to-end. Two failure modes are likely:
-- Layer 1's contract is subtly wrong for what a real skill needs, requiring revisions to MNEME-3..5.
+- The orchestration contract (`swarm` + `respond`) is subtly wrong for what a real skill needs, requiring revisions to MNEME-3..5.
 - The `respond` tool round-trip is too slow at N=5 to be usable, forcing N=1 default.
 
 If MNEME-S02 reports correlated forks, this ticket's confidence drops further and the trial count defaults to 1 with prominent `confidence: single-pass` tagging in the output.

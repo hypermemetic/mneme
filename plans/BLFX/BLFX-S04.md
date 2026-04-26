@@ -1,7 +1,7 @@
 ---
 id: BLFX-S04
 title: "Spike: base LLM choice (Sonnet vs Gemini-3.1-Pro)"
-status: Pending
+status: Complete
 type: spike
 blocked_by: []
 unlocks: [BLFX-4]

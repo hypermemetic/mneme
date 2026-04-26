@@ -1,7 +1,7 @@
 ---
 id: BLFX-5
 title: "LOO-CV-tuned α aggregation (replaces fixed-prior shrinkage)"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: [BLFX-13]

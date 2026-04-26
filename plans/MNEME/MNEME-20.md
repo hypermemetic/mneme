@@ -1,7 +1,7 @@
 ---
 id: MNEME-20
 title: "claudecode activation modernization: macro visibility, RawRequestContext, cookies + HTTP forwarding, error unification, loopback cleanup"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: []

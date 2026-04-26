@@ -54,13 +54,21 @@ BLFX-S04 (base LLM choice spike) ──> BLFX-4                                 
                                                               (BLFX-13 needs everything)
 BLFX-5  (LOO-CV α aggregation)         ─────┐
 BLFX-6  (hierarchical Platt)            ────┤
-BLFX-7  (source-specific empirical prior) ──┼────────────────────────────> BLFX-13
-BLFX-8  (crowd signal injection)        ────┤
+BLFX-7  (source-specific empirical prior) ──┤
+BLFX-8  (crowd signal injection)        ────┼────────────────────────────> BLFX-13
 BLFX-9  (4-layer date leakage defense)  ────┤
-BLFX-11 (scoring + stats framework)     ────┘
+BLFX-11 (scoring + stats framework)     ────┤
+BLFX-15 (source-specific data tools)    ────┘  (depends on BLFX-4)
 
 BLFX-S03 (cost estimate spike) is informational, gates whether BLFX-13 is feasible
 ```
+
+## Substrate-side prerequisites (parallel to BLFX work)
+
+| Ticket | Why it matters here |
+|---|---|
+| MNEME-22 | Token capture upstream — we can't honestly report cost-per-bench without it |
+| MNEME-23 | `forecast.resolve` — without outcome recording, BLFX-6 (hierarchical Platt) has no data to fit on |
 
 ## Phases
 
@@ -92,6 +100,7 @@ BLFX-S03 (cost estimate spike) is informational, gates whether BLFX-13 is feasib
 | Ticket | Title | Confidence |
 |--------|-------|-----------|
 | BLFX-9 | 4-layer date-leakage defense | medium |
+| BLFX-15 | Source-specific data tools (yfinance, FRED, Wikipedia-as-of-date) | medium |
 
 ### Phase 5 — Benchmark infrastructure
 
@@ -123,7 +132,7 @@ BLFX-S03 (cost estimate spike) is informational, gates whether BLFX-13 is feasib
 
 - **Brave Search specifically.** The paper uses Brave; we use whatever Claude Code's WebSearch backs onto. Engine-level comparability is not the point.
 - **Multi-class forecasting.** Stay binary. Murphy 2026 is binary; multi-class is future work.
-- **Source-specific data tools beyond what Claude Code provides.** The paper has `fetch_ts_yfinance`, `fetch_wikipedia_section`, etc. We rely on Claude Code's generic Read + WebSearch + Bash for now; specialized fetchers can land per source later.
+- ~~**Source-specific data tools beyond what Claude Code provides.**~~ Reinstated as in-scope per BLFX-15 (filed 2026-04-26). The paper's `fetch_ts_yfinance`, `fetch_ts_fred`, `fetch_wikipedia_section` are needed for BLFX-7 (empirical priors) and BLFX-9 (date-leakage defense via Wikipedia revision-as-of-date) to be correct.
 - **Reproducing the human-superforecaster baseline.** The paper compares to ABI=70.9 from ForecastBench leaderboard. We just need to hit BLF's number, not the human number.
 - **AIBQ2 dataset.** Paper used it for initial development (113 questions). We focus on ForecastBench; AIBQ2 can be added later if useful.
 

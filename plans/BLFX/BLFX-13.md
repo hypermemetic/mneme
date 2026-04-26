@@ -1,7 +1,7 @@
 ---
 id: BLFX-13
 title: "Faithful benchmark + ablation sweep"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: [BLFX-2, BLFX-3, BLFX-4, BLFX-5, BLFX-6, BLFX-7, BLFX-8, BLFX-9, BLFX-10, BLFX-11, BLFX-12]
 unlocks: []

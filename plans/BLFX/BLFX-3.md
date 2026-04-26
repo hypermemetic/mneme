@@ -1,7 +1,7 @@
 ---
 id: BLFX-3
 title: "Action enum + parser for the iterative loop"
-status: Pending
+status: Complete
 type: implementation
 blocked_by: [BLFX-S02]
 unlocks: [BLFX-4]

@@ -1,7 +1,7 @@
 ---
 id: BLFX-2
 title: "Structured belief state schema and prompt"
-status: Pending
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: [BLFX-4]

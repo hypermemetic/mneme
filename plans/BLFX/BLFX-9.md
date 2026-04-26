@@ -1,7 +1,7 @@
 ---
 id: BLFX-9
 title: "4-layer date-leakage defense"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: [BLFX-13]

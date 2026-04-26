@@ -1,7 +1,7 @@
 ---
 id: BLFX-6
 title: "Hierarchical Platt with per-source intercept offsets"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: [BLFX-13]

@@ -1,7 +1,7 @@
 ---
 id: BLFX-8
 title: "Crowd signal injection for market questions"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: [BLFX-13]

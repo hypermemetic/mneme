@@ -1,7 +1,7 @@
 ---
 id: BLFX-S03
 title: "Spike: cost estimate for one full BLFX benchmark run"
-status: Pending
+status: Complete
 type: spike
 blocked_by: []
 unlocks: [BLFX-13]

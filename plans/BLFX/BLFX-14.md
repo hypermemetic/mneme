@@ -1,7 +1,7 @@
 ---
 id: BLFX-14
 title: "Model-as-first-class-choice at every step + skillsets registry"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: [BLFX-13]

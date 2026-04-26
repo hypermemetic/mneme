@@ -1,7 +1,7 @@
 ---
 id: BLFX-10
 title: "ForecastBench dataset ingestion"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: [BLFX-S01]
 unlocks: [BLFX-12]

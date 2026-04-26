@@ -1,7 +1,7 @@
 ---
 id: MNEME-21
 title: "Bug: ensure_parent_session doesn't recreate when SKILL.md changes"
-status: Pending
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: []

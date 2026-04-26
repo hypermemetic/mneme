@@ -1,12 +1,28 @@
 ---
 id: BLFX-4
 title: "Iterative agent loop (per-trial multi-step belief update)"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: [BLFX-2, BLFX-3, BLFX-S02, BLFX-S04]
 unlocks: [BLFX-13]
-confidence: low
+confidence: medium
 ---
+
+## Progress
+
+**Skeleton landed 2026-04-26 (commit `fea6395` in mneme-substrate).**
+- `mneme-substrate/src/activations/forecast/iterative_loop.rs` —
+  `StepDriver` trait, `iterative_trial` driver, `QueueStepDriver` test
+  fixture, `build_step_prompt`.
+- 7/7 mock-only tests pass (submit-mid-loop, force-submit-at-T_max,
+  parse error, driver exhaustion, prompt rendering).
+- Confidence promoted from low → medium since all the parsing + state-
+  carry-forward primitives are now exercised.
+
+**Outstanding:** the live wiring — replacing
+`claudecode_swarm_runtime::run_one_trial` with a real claudecode-backed
+`StepDriver`. Acceptance criteria 4–6 (live multi-turn session, cost
+recorded, integration test) all gate on this.
 
 ## Problem
 

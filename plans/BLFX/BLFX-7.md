@@ -1,7 +1,7 @@
 ---
 id: BLFX-7
 title: "Source-specific empirical priors π_q"
-status: Pending
+status: Ready
 type: implementation
 blocked_by: []
 unlocks: [BLFX-13]

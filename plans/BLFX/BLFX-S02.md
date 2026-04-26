@@ -1,7 +1,7 @@
 ---
 id: BLFX-S02
 title: "Spike: action format for the iterative loop"
-status: Pending
+status: Ready
 type: spike
 blocked_by: []
 unlocks: [BLFX-3, BLFX-4]

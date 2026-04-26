@@ -1,7 +1,7 @@
 ---
 id: BLFX-S01
 title: "Spike: ForecastBench dataset access"
-status: Pending
+status: Ready
 type: spike
 blocked_by: []
 unlocks: [BLFX-10]

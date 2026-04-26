@@ -1,7 +1,7 @@
 ---
 id: BLFX-11
 title: "Scoring + stats framework (Brier Index + bootstrap CI)"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: [BLFX-12]

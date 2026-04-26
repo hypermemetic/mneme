@@ -1,7 +1,7 @@
 ---
 id: BLFX-12
 title: "Backtest runner"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: [BLFX-10, BLFX-11]
 unlocks: [BLFX-13]

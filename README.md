@@ -2,7 +2,7 @@
 
 > μνήμη — *memory*; the substrate that carries belief forward across agents.
 
-Mneme is a Plexus-native harness that turns the hypermemetic skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill is a typed Plexus activation. Each invocation spawns one or more Claude Code subagents via the existing `claudecode` activation in `plexus-substrate`, records the full execution as a directory artifact, and returns a structured response that downstream callers can condition on.
+Mneme is a Plexus RPC server (a fork of `plexus-substrate`) that turns the hypermemetic skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill is a typed Plexus activation. Each invocation spawns one or more Claude Code subagents via the `claudecode` activation, records the full execution as a directory artifact, and returns a structured response that downstream callers can condition on.
 
 The harness is the runtime that makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
 
@@ -22,6 +22,23 @@ artifact:   programs/8c1f3e0a-.../artifact.json
 ```
 
 The `programs/<id>/` directory IS the run: manifest, artifact, JSONL trace, captured Claude sessions, child program subdirectories. Replay, audit, and calibration all read this directory.
+
+Synapse works against the same backend with no extra wiring:
+
+```
+$ synapse -P 4444 forecast update --program-id Q-001 --new-evidence "BTC at $95k"
+```
+
+## This repo's role
+
+This repository (`mneme/`) is the **planning and design** repo: tickets, architecture decisions, the BLF paper figures, the issues log. The implementation lives in a sibling repo (`mneme-substrate/`) that was forked from `plexus-substrate` and evolves toward the architecture this repo's tickets describe.
+
+| Repo | Role |
+|------|------|
+| `mneme/` (this repo) | Planning artifacts: 18 tickets, ISSUES log, BLF paper + figures, architecture |
+| `mneme-substrate/` (sibling) | Implementation: forked Plexus RPC server with the `claudecode`, `swarm`, and skill activations |
+
+Keeping them split lets the planning artifacts evolve at a different pace from the code, and lets the implementation get aggressive with refactors without churning the design history.
 
 ## Inspiration
 
@@ -55,53 +72,77 @@ The mneme generalization: every artifact in an agent pipeline — tickets, plans
 
 ## Architecture
 
+mneme-substrate is **one Rust binary**. Plexus RPC is the boundary protocol exposed to outside callers (synapse, MCP, WS). Inside the binary, modules compose via normal Rust function calls — Plexus is not the internal calling convention.
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Layer 3: Harness binary  (`mneme`)                          │
-├─────────────────────────────────────────────────────────────┤
-│ Layer 2: Skill activations                                  │
-│   forecast / ticketing / planning / security_review / ...   │
-├─────────────────────────────────────────────────────────────┤
-│ Layer 1: Orchestration primitives  (`swarm`, `respond`)     │
-│   trial / aggregate / sequential / race                     │
-├─────────────────────────────────────────────────────────────┤
-│ Layer 0: claudecode activation  (in plexus-substrate)       │
-│   sessions, fork, loopback, persistence                     │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ External callers (synapse, MCP, WS clients)                  │
+└────────────────────────┬─────────────────────────────────────┘
+                         │ Plexus RPC over WS / stdio / HTTP
+┌────────────────────────▼─────────────────────────────────────┐
+│ mneme-substrate (single binary)                              │
+│                                                              │
+│  Skill activations  ── forecast / ticketing / planning /     │
+│       │                 security_review / strong_typing      │
+│       │  (Rust calls, not RPC)                               │
+│       ▼                                                      │
+│  Orchestration      ── swarm.trial / aggregate /             │
+│       │                 sequential / race                    │
+│       │  (Rust calls)                                        │
+│       ▼                                                      │
+│  claudecode         ── sessions, fork, loopback, persistence │
+│       ▲                                                      │
+│       │ MCP loopback (real boundary — Claude inside session  │
+│       │              calls back via per-program tool reg)    │
+│  Substrate runtime  ── program lifecycle (wraps dispatch)    │
+│                        per-program tool registry             │
+│                        session attribution                   │
+│                        calibration store                     │
+│                        schema enforcement on returns         │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-The four layers are independently testable and replaceable. Layer 0 is upstream (lives in `plexus-substrate`); the rest is what this repo builds.
+Key principles:
+
+- **One dispatch path = one observability surface.** Skill A calling skill B in-process goes through Rust, not RPC. The substrate's program-lifecycle middleware wraps the *external* dispatch boundary so every top-level call becomes a recorded program; internal composition is recorded by the substrate's awareness of swarm calls.
+- **Programs are substrate state, not Plexus state.** Plexus method shapes are unchanged from upstream; the substrate just brackets each top-level call with program open/close.
+- **Loopback is the only place we cross a serialization boundary internally.** When Claude *inside* a session calls back via MCP, that's a real principal change and the per-program `respond` tool registry handles it.
 
 ## Status
 
-Pre-implementation. Tickets are written but no code exists yet. See [`plans/MNEME/MNEME-1.md`](plans/MNEME/MNEME-1.md) for the epic and the phase breakdown.
+In-flight. The plans are written; implementation is starting.
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 1 | One skill (`forecast`) end-to-end through the full stack with recording | Tickets pending |
-| 2 | Port the rest of the skill suite (`ticketing`, `planning`, `security_review`, `strong_typing`) | Tickets pending |
-| 3 | Sequential / race primitives + calibration loop closure | Tickets pending |
+| 0 | Fork plexus-substrate → mneme-substrate (sibling repo); structural changes only, no behavior change | In progress |
+| 1 | Substrate-side modules: program lifecycle, swarm primitives, aggregation math, respond protocol, calibration | Tickets pending |
+| 2 | Forecast skill end-to-end (the validation skill) | Ticket pending |
+| 3 | Port `ticketing`, `planning`, `security_review`, `strong_typing` as activations | Tickets pending |
+| 4 | Sequential / race / calibration loop closure | Tickets pending (deferred until usage justifies) |
 
-All tickets currently sit at `status: Pending`. Per the methodology, tickets need explicit human approval before flipping to `Ready` for implementation.
+All tickets currently sit at `status: Pending`. Per the methodology, tickets need explicit human approval before flipping to `Ready` for implementation. The 18 tickets are in [`plans/MNEME/`](plans/MNEME/); the epic overview is [`MNEME-1.md`](plans/MNEME/MNEME-1.md).
+
+## Issues log
+
+[`ISSUES.md`](ISSUES.md) is the append-only journal of issues discovered during work on mneme and adjacent skills. No issue too small to log. Discipline: every check that surfaces something gets an entry, including warnings that would normally be waved through. A logged-and-deferred issue is fine; an unlogged one rots in conversation history.
 
 ## Layout
 
 ```
 mneme/
   README.md
-  plans/
-    MNEME/
-      MNEME-1.md         epic overview
-      MNEME-S01..S03.md  spikes
-      MNEME-2..15.md     implementation tickets
+  ISSUES.md            append-only issues journal
+  plans/MNEME/
+    MNEME-1.md         epic overview (architecture + DAG + phases)
+    MNEME-S01..S03.md  spikes (3)
+    MNEME-2..15.md     implementation tickets (14)
   docs/
-    blf-paper.pdf        local copy of the inspiration paper
-    figures/             figures extracted from the paper
-  programs/              (created at first run; one subdir per invocation)
+    blf-paper.pdf      local copy of the BLF paper
+    figures/           three curated figures (belief evolution, trial agg, leaderboard)
 ```
 
 ## Methodology pointers
 
-The skill suite mneme orchestrates lives at `~/dev/controlflow/hypermemetic/skills/skills/`. The methodology that informs ticket structure (the "two-stranger test", the `## Evidence` section, the `confidence:` frontmatter, the spikes-as-evidence-sources principle) lives in those skills' `SKILL.md` files and in `~/CLAUDE.md`.
+The skill suite mneme orchestrates lives at `~/dev/controlflow/hypermemetic/skills/skills/`. The methodology that informs ticket structure (the "two-stranger test", the `## Evidence` section, the `confidence:` frontmatter, the spikes-as-evidence-sources principle, the bilateral `presence` working posture) lives in those skills' `SKILL.md` files and in `~/CLAUDE.md`.
 
 This repo's tickets exemplify the discipline they describe — every implementation ticket carries a real `## Evidence` section, every spike has a binary pass condition plus structured evidence to record, and every confidence value is set deliberately so post-MVP calibration has data to learn from.

@@ -1,0 +1,4 @@
+org = "hypermemetic"
+forges = ["github"]
+visibility = "public"
+description = "Skill orchestration on Plexus RPC: design, tickets, ISSUES log, BLF paper"

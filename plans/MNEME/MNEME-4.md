@@ -91,3 +91,7 @@ Behavior:
 ## Completion
 
 Implementor runs the three swarm.trial tests, all pass; status flips to `Complete` in the same commit as the code.
+
+## Implementation status (2026-04-26 autonomous session)
+
+`SwarmRuntime` trait, `TrialParams`, `TrialBatch`, `TrialResult`, `TrialFailure`, and `SWARM_TRIAL_N_CAP` are in `mneme-substrate/src/mneme/runtime/swarm_runtime.rs`. Two impls landed: `StubSwarmRuntime` (always returns NotImplemented) and `DeterministicMockSwarmRuntime` (test fixture that returns pre-loaded responses + records the trace entry on the program). The end-to-end pipeline test `pipeline_e2e_program_trial_aggregate_calibrate_artifact` proves the full forecast pipeline works against the mock. **What's missing:** the production impl that drives `claudecode.fork` + `chat_async` + `poll`; needs a live `ClaudeCode` handle wired in via `builder.rs`. Pending MNEME-S02 + S03 spike findings to confirm fork independence and parallel-fork bound.

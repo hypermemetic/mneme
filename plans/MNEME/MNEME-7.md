@@ -88,3 +88,7 @@ Behavior:
 ## Completion
 
 Implementor runs the three recorder tests, all pass; status flips to `Complete` in the same commit as the code.
+
+## Implementation status (2026-04-26 autonomous session)
+
+The `Program` type at `mneme-substrate/src/mneme/program/mod.rs` IS the recorder this ticket described — same lifecycle (open / record_trace / close_completed / close_failed), same on-disk layout (per MNEME-2). The "ProgramRecorder" name in this ticket's body is the same concept; the implementation just calls it `Program` because there's no separate writer class. `record_trace` is exercised by `DeterministicMockSwarmRuntime` in the e2e pipeline test. **What's missing:** the dispatch-path integration that automatically opens/closes a Program around every external method call — gated on the dispatch interception strategy decision (see `mneme-substrate/src/mneme/runtime/program_runtime.rs` for three options).

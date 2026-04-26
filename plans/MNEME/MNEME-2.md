@@ -96,3 +96,7 @@ The `programs/<program_id>/` directory MUST contain:
 ## Completion
 
 Implementor delivers `docs/program-format.md`, flips status to `Complete` in this ticket, and commits both in one change.
+
+## Implementation status (2026-04-26 autonomous session)
+
+The data model is implemented in `mneme-substrate/src/mneme/program/` (manifest.rs, trace.rs, directory.rs, id.rs, mod.rs). The schema-version field defaults are wired (`MANIFEST_SCHEMA_VERSION = "0.1.0"`). The `docs/program-format.md` companion doc is NOT yet written — that's the remaining work for this ticket. The Rust code is the source of truth for the format until the doc catches up; readers can `cargo doc --open` the manifest module for now. Architecture overview at `mneme-substrate/docs/architecture/16669551678743899647_mneme-architecture.md`.

@@ -80,3 +80,15 @@ mneme replay <program_id>         # post-MVP placeholder; emit "not yet implemen
 ## Completion
 
 Implementor runs the e2e shell test against a real Anthropic API key; it passes; status flips to `Complete` in the same commit as the code.
+
+## Implementation status (2026-04-26 autonomous session)
+
+CLI scaffold lives at `mneme-substrate/src/bin/mneme.rs`. Three read-only subcommands work today (no runtime needed):
+
+- `mneme inspect <program-id>` — pretty-prints manifest + artifact (or error.json)
+- `mneme programs list` — tabular index of `programs/` with status, started_at, entry_skill
+- `mneme programs trace <program-id>` — pretty-prints trace.jsonl
+
+`mneme run <method>` is stubbed; emits a clear "not implemented" message pointing at the SwarmRuntime wiring needed in `src/mneme/runtime/swarm_runtime.rs`. Verified manually against a fixture program directory; output formatting works as designed.
+
+**What's missing:** the `run` subcommand wiring, which needs SwarmRuntime to be real. Cargo auto-discovers the binary from `src/bin/`, so no Cargo.toml change is required to build it (LOG-16).

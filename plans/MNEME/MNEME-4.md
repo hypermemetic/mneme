@@ -3,7 +3,7 @@ id: MNEME-4
 title: "`swarm.trial` — fan-out via fork"
 status: Pending
 type: implementation
-blocked_by: [MNEME-3, MNEME-S02]
+blocked_by: [MNEME-3, MNEME-S02, MNEME-S03]
 unlocks: [MNEME-5, MNEME-6]
 confidence: medium
 ---

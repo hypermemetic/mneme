@@ -4,7 +4,7 @@ title: "`mneme` harness binary"
 status: Pending
 type: implementation
 blocked_by: [MNEME-7]
-unlocks: []
+unlocks: [MNEME-9, MNEME-10, MNEME-11, MNEME-12, MNEME-13, MNEME-14, MNEME-15]
 confidence: high
 ---
 

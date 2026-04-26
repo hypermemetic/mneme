@@ -4,7 +4,7 @@ title: "`respond` tool + structured-output protocol"
 status: Pending
 type: implementation
 blocked_by: [MNEME-S01]
-unlocks: [MNEME-4]
+unlocks: [MNEME-4, MNEME-6]
 confidence: medium
 ---
 

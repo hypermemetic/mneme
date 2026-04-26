@@ -88,7 +88,7 @@ In priority order, smallest blast radius first:
 - **Touch the substrate's existing dispatch path.** Inserting program-lifecycle middleware into the jsonrpsee/DynamicHub path needed your judgment on the insertion strategy.
 - **Modify any other repo.** Per your "only commit to new repos" rule, I committed only to `mneme` and `mneme-substrate`. Nothing in `plexus-substrate`, `plexus-core`, `plexus-macros`, or any other crate was touched.
 - **Promote any tickets to `Ready`.** All 18 tickets in `mneme/plans/MNEME/` are still `Pending`. Per the methodology, that's your flip to make.
-- **Build the harness CLI binary.** Phase 4 in my task list. Premature without the runtime; just plumbing on top of work that doesn't exist yet.
+- **Make `mneme run` actually invoke a skill end-to-end.** The CLI scaffold landed in Phase 4c with `inspect`, `programs list`, `programs trace` working. `mneme run <method>` is intentionally stubbed pending the SwarmRuntime → ClaudeCode wiring. Wiring `run` is a thin layer on top of that wiring; both should land together.
 - **Implement the full JSON Schema spec.** `respond/schema.rs` validates type/required/range — enough for forecast and the other phase-2 skills. Full spec is a phase-3 swap (`jsonschema` crate is the easy answer).
 
 ## Issues opened during this session

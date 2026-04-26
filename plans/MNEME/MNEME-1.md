@@ -9,7 +9,7 @@ unlocks: []
 
 ## Goal
 
-A Plexus-native harness that turns the existing skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill becomes a typed Plexus activation. Each invocation spawns one or more Claude Code subagents (via the existing `claudecode` activation in `plexus-substrate`), records the full execution as a directory artifact, and returns a structured response a downstream caller can condition on.
+A Plexus RPC server (forked from `plexus-substrate` as `mneme-substrate`) that turns the existing skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill is a typed Plexus activation. Each invocation spawns one or more Claude Code subagents (via the `claudecode` activation in `mneme-substrate`), records the full execution as a directory artifact, and returns a structured response a downstream caller can condition on.
 
 The harness is the runtime that makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
 
@@ -39,7 +39,7 @@ The skills as written are documentation: agents read them and apply them by hand
 │   `swarm` activation: trial / aggregate / sequential / race │
 │   `respond` tool: structured-output coercion via tool-use   │
 ├─────────────────────────────────────────────────────────────┤
-│ Layer 0: claudecode activation (EXISTS in plexus-substrate) │
+│ Layer 0: claudecode activation (in mneme-substrate, inherited from upstream) │
 │   Sessions, fork, loopback, persistence                     │
 └─────────────────────────────────────────────────────────────┘
 ```

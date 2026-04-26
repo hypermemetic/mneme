@@ -18,7 +18,7 @@ This pattern works only if the loopback MCP exposes (a) tool registration with a
 
 ## Setup
 
-1. Read `plexus-substrate/src/activations/claudecode/activation.rs` around the loopback handling code (look for `loopback_session_id` references and the MCP wiring).
+1. Read `mneme-substrate/src/activations/claudecode/activation.rs` around the loopback handling code (look for `loopback_session_id` references and the MCP wiring).
 2. Identify the existing loopback MCP server entry point — the code that responds to MCP `tools/list` and `tools/call`.
 3. Build a minimal proof: register a tool `echo_typed` with input schema `{"type":"object","properties":{"value":{"type":"integer","minimum":0,"maximum":10}},"required":["value"]}`. Start a `claudecode` session with loopback enabled and a system prompt instructing Claude to call `echo_typed`.
 4. Send `chat` with prompt: "Please call echo_typed with value 7."

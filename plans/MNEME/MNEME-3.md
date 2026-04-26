@@ -14,7 +14,7 @@ A skill activation needs to return a typed value (e.g., `Forecast { probability:
 
 ## Context
 
-- `claudecode` activation (`plexus-substrate/src/activations/claudecode/activation.rs`) supports `allowed_tools` / `disallowed_tools` parameters that pass through to the Claude CLI's `--allowedTools` / `--disallowedTools` flags.
+- `claudecode` activation (`mneme-substrate/src/activations/claudecode/activation.rs`) supports `allowed_tools` / `disallowed_tools` parameters that pass through to the Claude CLI's `--allowedTools` / `--disallowedTools` flags.
 - The substrate's loopback MCP exposes substrate-side tools to the running Claude session (mechanism investigated in MNEME-S01).
 - Tool inputs in the Anthropic API are constrained by JSON Schema; Claude is trained to respect schemas and self-correct on validation errors.
 
@@ -63,7 +63,7 @@ The handle is auto-cleaned up when dropped (deregister the tool from the loopbac
 
 ## What must NOT change
 
-- The `claudecode` activation API. This ticket consumes it as-is; if the API needs changes, they belong in a separate ticket against plexus-substrate.
+- The `claudecode` activation API. This ticket consumes it as-is; if the API needs changes, they belong in a separate ticket against mneme-substrate (or upstream plexus-substrate if the change should backport).
 - The `ChatEvent` enum. We piggyback on existing `ToolUse`/`ToolResult` events; no new event types.
 
 ## Acceptance criteria

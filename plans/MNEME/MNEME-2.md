@@ -56,7 +56,7 @@ The `programs/<program_id>/` directory MUST contain:
 | `finished_at` | ISO 8601 string \| null | UTC; null if still running |
 | `status` | enum | `running` \| `completed` \| `failed` |
 | `artifact_schema_version` | string \| null | Set when artifact is written |
-| `substrate_version` | string | The plexus-substrate semver that ran the program |
+| `substrate_version` | string | The mneme-substrate semver that ran the program |
 | `mneme_version` | string | The harness binary semver |
 
 `trace.jsonl` line shape (one per `swarm.*` call):

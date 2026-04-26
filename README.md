@@ -4,7 +4,7 @@
 
 Mneme is a Plexus RPC server (a fork of `plexus-substrate`) that turns the hypermemetic skill suite (`ticketing`, `planning`, `security-review`, `strong-typing`, `forecast`) into platform services. Each skill is a typed Plexus activation. Each invocation spawns one or more Claude Code subagents via the `claudecode` activation, records the full execution as a directory artifact, and returns a structured response that downstream callers can condition on.
 
-The harness is the runtime that makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
+Mneme is the runtime that makes the BLF principle — *every artifact carries forward the evidence that justifies it* — operational at the protocol layer rather than at the documentation layer.
 
 ## What it gives you
 
@@ -68,7 +68,7 @@ The mneme generalization: every artifact in an agent pipeline — tickets, plans
 
 ![Forecasting leaderboard: Superforecaster median forecast, Cassi ensemble, Gemini-3-Pro-Preview, Grok 4.20, GPT-5, Foresight-32B — with Dataset, Market, and Overall scores plus 95% CIs.](docs/figures/fig03-leaderboard.png)
 
-*The competitive frontier mneme inherits. The harness's job is to make these techniques composable and re-usable across skills, not just forecasting.*
+*The competitive frontier mneme inherits. Mneme's job is to make these techniques composable and re-usable across skills, not just forecasting.*
 
 ## Architecture
 

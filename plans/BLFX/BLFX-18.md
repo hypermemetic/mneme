@@ -1,7 +1,7 @@
 ---
 id: BLFX-18
 title: "bench-005: paired n=100 with paper-aligned config (α=1.0 + iterative + Platt)"
-status: Ready
+status: Complete
 type: experiment
 blocked_by: [BLFX-17, MNEME-26, MNEME-27, MNEME-28]
 unlocks: [BLFX-13]

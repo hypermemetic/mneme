@@ -1,7 +1,7 @@
 ---
 id: MNEME-26
 title: "Resolve bench-003 predictions into the calibration store"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: [BLFX-5, BLFX-6, MNEME-28]

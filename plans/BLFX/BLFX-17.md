@@ -1,7 +1,7 @@
 ---
 id: BLFX-17
 title: "bench-004: paired iterative-loop vs single-shot on bench-003's n=20"
-status: Ready
+status: Complete
 type: experiment
 blocked_by: [BLFX-4, BLFX-16]
 unlocks: [BLFX-18]

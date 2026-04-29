@@ -1,7 +1,7 @@
 ---
 id: MNEME-28
 title: "Wire platt_apply into forecast.update artifact construction"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: [MNEME-26]
 unlocks: [BLFX-6, BLFX-13]

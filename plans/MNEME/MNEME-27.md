@@ -1,7 +1,7 @@
 ---
 id: MNEME-27
 title: "Switch logit-shrinkage default from λ=0.2 to λ=0.0 (no shrinkage)"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: [BLFX-17, BLFX-18]

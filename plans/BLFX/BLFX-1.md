@@ -40,35 +40,52 @@ The other changes are localized:
 ## Dependency DAG
 
 ```
-BLFX-S01 (ForecastBench access spike)
-   │
-   └──> BLFX-10 (dataset ingestion)
-          │
-          └──> BLFX-12 (backtest runner) ──> BLFX-13 (faithful benchmark)
-                 ▲
-BLFX-S02 (action format spike) ──> BLFX-3 (action enum + parser) ──> BLFX-4 (iterative loop)
-                                         ▲                                  │
-BLFX-2 (structured belief state) ────────┴──────────────────────────────────┤
-                                                                            │
-BLFX-S04 (base LLM choice spike) ──> BLFX-4                                 ▼
-                                                              (BLFX-13 needs everything)
-BLFX-5  (LOO-CV α aggregation)         ─────┐
-BLFX-6  (hierarchical Platt)            ────┤
-BLFX-7  (source-specific empirical prior) ──┤
-BLFX-8  (crowd signal injection)        ────┼────────────────────────────> BLFX-13
-BLFX-9  (4-layer date leakage defense)  ────┤
-BLFX-11 (scoring + stats framework)     ────┤
-BLFX-15 (source-specific data tools)    ────┘  (depends on BLFX-4)
+[infra: bench infrastructure] ──> BLFX-10/11/12 — Complete
+[algo: belief state]          ──> BLFX-2 — Complete
+[algo: action parser]         ──> BLFX-3 — Complete
+[algo: iterative scaffold]    ──> BLFX-4 + BLFX-16 — Complete
 
-BLFX-S03 (cost estimate spike) is informational, gates whether BLFX-13 is feasible
+[paper-faithful chain — ALL must land for BLFX-13 to be honest]
+
+  ┌─────────────────┐
+  │ MNEME-26        │  resolve bench-003 → calibration store
+  │ MNEME-27        │  α=1.0 default (match paper)
+  └────────┬────────┘
+           │
+  ┌────────▼────────┐
+  │ MNEME-28        │  wire platt_apply into forecast.update
+  └────────┬────────┘
+           │
+  ┌────────▼────────┐
+  │ BLFX-17 bench-004│  paired iterative-vs-single-shot, n=20
+  │   (uses MNEME-27)│
+  └────────┬────────┘
+           │
+  ┌────────▼────────┐
+  │ BLFX-18 bench-005│  paired n=100 with paper-aligned config
+  │   (uses 26+27+28)│
+  └────────┬────────┘
+           │  (the first defensible mneme-vs-crowd number)
+           ▼
+  BLFX-5 (LOO-CV α)         ────┐
+  BLFX-6 (hierarchical Platt) ──┤
+  BLFX-7 (source priors)      ──┤
+  BLFX-8 (crowd signal)       ──┼──> BLFX-13 (integrated benchmark)
+  BLFX-9 (date-leakage)       ──┤
+  BLFX-15 (source data tools) ──┘
 ```
 
 ## Substrate-side prerequisites (parallel to BLFX work)
 
-| Ticket | Why it matters here |
-|---|---|
-| MNEME-22 | Token capture upstream — we can't honestly report cost-per-bench without it |
-| MNEME-23 | `forecast.resolve` — without outcome recording, BLFX-6 (hierarchical Platt) has no data to fit on |
+| Ticket | Status | Why it matters here |
+|---|---|---|
+| MNEME-22 | Ready | Token capture upstream — we can't honestly report cost-per-bench without it |
+| MNEME-23 | Complete | `forecast.resolve` — outcome recording. Required for any calibration loop |
+| MNEME-24 | Complete | parallel trials — wall-clock complexity for K trials |
+| MNEME-25 | Complete | concurrency on backtest runner — wall-clock for n questions |
+| MNEME-26 | Ready | resolve bench-003 → seeds calibration store; unblocks BLFX-5/6 |
+| MNEME-27 | Ready | α=1.0 default — fix the wrong-direction shrinkage NOW (paper's empirical optimum) |
+| MNEME-28 | Ready | wire platt_apply into forecast.update — closes the calibration loop |
 
 ## Phases
 
@@ -101,6 +118,13 @@ BLFX-S03 (cost estimate spike) is informational, gates whether BLFX-13 is feasib
 |--------|-------|-----------|
 | BLFX-9 | 4-layer date-leakage defense | medium |
 | BLFX-15 | Source-specific data tools (yfinance, FRED, Wikipedia-as-of-date) | medium |
+
+### Phase 4.5 — Operational benches (paper-faithful path)
+
+| Ticket | Title | Confidence |
+|--------|-------|-----------|
+| BLFX-17 | bench-004: paired iterative-vs-single-shot at n=20 | medium |
+| BLFX-18 | bench-005: paired n=100 with paper-aligned config | medium |
 
 ### Phase 5 — Benchmark infrastructure
 

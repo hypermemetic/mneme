@@ -6,6 +6,10 @@ type: implementation
 blocked_by: []
 unlocks: [BLFX-13]
 confidence: medium
+forecast:
+  hypothesis: "Will building BLFX-9 and re-running bench-006 with the date-leakage defense active produce a paired delta vs crowd that lands within ±10 BI of Murphy 2026's claimed +4 BI (i.e., delta in [-6, +14])?"
+  resolution_method: "Re-run scripts/forecastbench_holdout_run.py against the same 2026-03-15 questions with BLFX-9's leakage-defense prompt active. Compute paired Brier delta. Resolves YES if delta in [-6, +14] BI; NO if delta > +14 (suggesting our +26 BI win has substantive non-contamination signal); N/A if BLFX-9 isn't built within deadline."
+  deadline: "2026-05-27T00:00:00Z"
 ---
 
 ## Problem

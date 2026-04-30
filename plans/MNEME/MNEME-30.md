@@ -7,6 +7,10 @@ blocked_by: []
 unlocks: []
 confidence: medium
 severity: Medium
+forecast:
+  hypothesis: "Will the first 30 Manifold markets resolved through MNEME-30's pipeline (counted from 2026-04-29) show mneme's mean Brier <= the paired Manifold-crowd Brier on the same set, when measured 12 weeks from now?"
+  resolution_method: "After 30 markets in pairings.jsonl have resolved (via marketwatch_resolve.py producing >=30 entries in resolutions.jsonl with resolution in {YES, NO}), compute paired Brier scores: our_p at first forecast vs manifold_p at first forecast vs actual. Resolves YES if mean(our_brier - manifold_brier) <= 0; NO otherwise; N/A if 30 resolutions haven't accumulated by deadline."
+  deadline: "2026-07-22T00:00:00Z"
 ---
 
 ## Problem

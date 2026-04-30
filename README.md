@@ -2,7 +2,7 @@
 
 > μνήμη — *memory*. A forecasting substrate that beats the prediction-market crowd, and the same substrate used to forecast its own design.
 
-Mneme is a working implementation of the [Bayesian Linguistic Forecaster (BLF) algorithm from Murphy 2026](https://arxiv.org/abs/2604.18576) running on a containerized Plexus RPC server. You give it a binary, dated, observable question; it fans out K parallel reasoning trials with web-search-grounded iterative agent loops; it aggregates them in logit space; it applies hierarchical calibration learned from past resolutions; it records the prediction so you can resolve it later when the outcome lands.
+Mneme is a working implementation of the [Bayesian Linguistic Forecaster (BLF) algorithm from Murphy 2026](https://arxiv.org/abs/2604.18576) running on a containerized Plexus RPC server. You give it a binary, dated, observable question; it fans out K parallel reasoning trials with web-search-grounded iterative agent loops; it aggregates them [in logit space](docs/aggregation-in-logit-space.md); it applies hierarchical calibration learned from past resolutions; it records the prediction so you can resolve it later when the outcome lands.
 
 The recursion: the same machinery that forecasts events forecasts software design. A ticket can carry a `forecast:` block in its frontmatter — at filing time, the substrate predicts whether that design choice will pan out. When the work ships, `forecast.resolve` closes the loop. Over months, the calibration store grows with predictions about the system's own design.
 
@@ -30,7 +30,7 @@ Result docs: [`plans/BLFX/results/`](plans/BLFX/results/).
 1. **Linguistic belief state** — `(probability, evidence_for, evidence_against, open_questions, confidence)`. Structured, not just a scalar.
 2. **K parallel trials** per question.
 3. **Iterative agent loop** within each trial — at each step the LLM emits an action AND an updated belief; substrate executes the action; loop until `submit` or T_max steps.
-4. **Logit-space LOO-CV-shrunken aggregation** across the K trials.
+4. **[Logit-space](docs/aggregation-in-logit-space.md) LOO-CV-shrunken aggregation** across the K trials.
 5. **Hierarchical Platt calibration** with per-source intercept offsets, fit from resolved-outcome history.
 
 The paper's headline: **+4 BI above the prediction-market crowd / human superforecaster baseline on ForecastBench**, using Gemini-3.1-Pro.

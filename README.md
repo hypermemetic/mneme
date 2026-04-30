@@ -154,6 +154,14 @@ synapse -P 4456 substrate forecast resolve --program-id <id> --actual true
 
 Once you have ≥10 resolutions, Platt calibration kicks in. See [`mneme-substrate/README.md`](https://github.com/hypermemetic/mneme-substrate#readme) for the full operator's guide — bench runs, live Manifold pipeline, ticket-as-forecast, container internals.
 
+### Or: ask Claude
+
+If you're working in Claude Code (or any agent that loads the `hypermemetic/skills` repo), just describe what you want and Claude will drive the substrate for you:
+
+> "Forecast whether SPX closes above 7,500 on December 31, 2026."
+
+Claude reads the [`mneme` skill](https://github.com/hypermemetic/skills/blob/main/skills/mneme/SKILL.md), checks the substrate is running (boots it if not), fires the forecast, waits for the result, and presents the structured belief in plain English with the calibration regime + caveats. It can also resolve forecasts, run benchmarks, watch markets, and predict design decisions on your behalf.
+
 ## Architecture
 
 ```

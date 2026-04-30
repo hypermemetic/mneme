@@ -1,7 +1,7 @@
 ---
 id: MNEME-33
 title: "Resilience for periodic downtime: orphan-forecast recovery + calibration-feed retry + market-deletion handling"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: []

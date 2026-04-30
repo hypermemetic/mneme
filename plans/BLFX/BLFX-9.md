@@ -85,3 +85,38 @@ Layer-by-layer:
 ## Completion
 
 Tests pass + audit results recorded; status flips to `Complete`.
+
+## Status update — 2026-04-26 (partial)
+
+MVP of layers 1 + 4 with substrate-level enforcement landed:
+
+- `EnvContext` struct + `LeakClassifier` trait in
+  `src/activations/forecast/agent_loop.rs` (re-exported via
+  `forecast::EnvContext`, `forecast::LeakClassifier`).
+- `apply_search_query_date_filter(query, cutoff)` — appends
+  `before:YYYY-MM-DD` when cutoff is set; idempotent.
+- `is_url_blocked(url, blocklist)` — substring match.
+- Wired through `TrialParams.env`, `ClaudecodeStepDriver.env`,
+  `forecast.update`'s new `cutoff_date` + `blocked_urls` params.
+- `run_web_search` filters the query (layer 1), drops blocked-URL
+  hits (layer 4), and runs each remaining hit through the optional
+  classifier (layer 2 mechanism present, no impl yet).
+- `run_lookup_url` refuses blocked URLs at the substrate level.
+- 7 unit tests covering the new helpers; full lib suite 382/382 green.
+
+**Deferred (still Ready):**
+
+- Layer 2 production impl: a `HaikuLeakClassifier` that uses the
+  capability registry. Trait + plumbing are ready; just needs a
+  concrete implementor + tests. (~30 LOC + 2 tests.)
+- Layer 3: `FetchTimeSeries` / `FetchWikipediaSection` are still
+  stubbed actions throughout the codebase, so date clamping has no
+  surface to attach to yet. Wait until BLFX-15 (source tools) lands.
+- Audit test: criterion #5 (run on 10 known backtest questions and
+  manually inspect for leakage). Multi-hour LLM run; defer until
+  bench window is allocated.
+- Re-run bench-006 with `cutoff_date` set on every question and see
+  how much of the +26 BI delta survives — this is the actual
+  hypothesis the ticket's `forecast:` block is forecasting.
+
+Status remains `Ready` until the audit + bench rerun close the loop.

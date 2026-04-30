@@ -6,6 +6,10 @@ type: implementation
 blocked_by: [BLFX-4]
 unlocks: [BLFX-13]
 confidence: medium
+forecast:
+  hypothesis: "Will yfinance + FRED data tools (the first two of the four planned sources) ship within 21 days AND produce a paired Brier Index improvement of ≥ +3.0 BI on the quantitative-financial subset of bench-006 questions (subset = questions where the resolution criterion references a price, rate, index, or numeric macroeconomic indicator)?"
+  resolution_method: "After yfinance + FRED tools land in agent_loop's execute_action and ClaudecodeStepDriver, manually tag each bench-006 question as quant-financial or not (one-pass YES/NO). Rerun forecastbench_holdout_run.py with these tools enabled. Resolves YES if (paired Δ BI on the quant subset with tools active) − (paired Δ BI on same subset bench-006 baseline) ≥ +3.0 AND the subset has ≥10 questions; NO if < +3.0 or the subset is too small to score; N/A if yfinance + FRED aren't both shipped by deadline. The risk is the model already getting these answers correctly via WebSearch, making the structured tools redundant."
+  deadline: "2026-05-22T00:00:00Z"
 ---
 
 ## Problem

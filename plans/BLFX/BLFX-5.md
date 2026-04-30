@@ -6,6 +6,10 @@ type: implementation
 blocked_by: []
 unlocks: [BLFX-13]
 confidence: medium
+forecast:
+  hypothesis: "Will replacing the static λ=0 default with LOO-CV-tuned α (computed from ≥100 resolved observations in the calibration store) shift mneme's paired Brier delta on the bench-006 question set by ≥ +1.0 BI vs the static-λ baseline?"
+  resolution_method: "After BLFX-5 ships, rerun scripts/forecastbench_holdout_run.py against the same 2026-03-15 questions used in bench-006 (same trials=2, iterative_max_steps=5, concurrency=6). Resolves YES if (paired Δ BI with LOO-CV α) − (paired Δ BI bench-006 baseline = +26.5) ≥ +1.0; NO if < +1.0 (paper's α≈1 finding implies static λ=0 is already near-optimal — small/no gain); N/A if BLFX-5 isn't built by deadline."
+  deadline: "2026-06-15T00:00:00Z"
 ---
 
 ## Problem

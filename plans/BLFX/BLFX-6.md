@@ -6,6 +6,10 @@ type: implementation
 blocked_by: []
 unlocks: [BLFX-13]
 confidence: medium
+forecast:
+  hypothesis: "Will replacing flat Platt with hierarchical Platt (global slope + per-source intercepts δ_s, L2-regularized) produce a per-source mean-Brier improvement of ≥ 0.02 on at least one of {polymarket, metaculus, manifold} sources when re-run on the bench-006 question set?"
+  resolution_method: "After BLFX-6 ships, rerun forecastbench_holdout_run.py on the 2026-03-15 questions and compute per-source mean Brier under both flat and hierarchical Platt fits (using the same calibration store snapshot). Resolves YES if max_s [mean_brier_flat - mean_brier_hier] ≥ 0.02 (i.e., one source's intercept correction is meaningfully visible); NO otherwise; N/A if BLFX-6 isn't built by deadline. Paper claims hierarchical Platt 'outperforms global calibration in all settings' — magnitude is what's uncertain."
+  deadline: "2026-06-15T00:00:00Z"
 ---
 
 ## Problem

@@ -105,111 +105,51 @@ The 0.50 on BLFX-9 is the system saying "I genuinely don't know if our +26 BI de
 ## Quick start (Claude subscription, no API key)
 
 You need:
-- macOS (Keychain forwarding is macOS-specific; Linux works with `CLAUDE_CODE_OAUTH_TOKEN` env var)
-- Docker or Podman
-- An active Claude subscription with `claude` CLI logged in
-- `synapse` CLI for sending RPC calls (optional but recommended)
+- macOS or Linux
+- Docker / Podman / Colima
+- A Claude subscription with the `claude` CLI installed (the run script will trigger `claude /login` automatically if you don't have an OAuth token yet)
 
 ```bash
 git clone git@github.com:hypermemetic/mneme.git
 git clone git@github.com:hypermemetic/mneme-substrate.git
 cd mneme-substrate
 
-# Build the container (~3 min cold; cache-mounted incremental rebuilds in ~30s)
-bash scripts/run_container.sh build
-
-# Start it, detached. The script reads your Claude Code OAuth token
-# from the macOS Keychain entry "Claude Code-credentials" and forwards
-# it to the container as CLAUDE_CODE_OAUTH_TOKEN. No API key required;
-# usage is billed against your Claude subscription.
-bash scripts/run_container.sh up -d
-
-# Verify substrate is up on port 4456
-docker logs mneme | tail
-synapse -P 4456 substrate forecast schema  # or any list/info call
+make install         # symlink the `mneme` CLI to ~/.local/bin
+make build           # build the container (~3 min cold; ~30s incremental)
+make run             # start substrate detached + drop into the container shell
 ```
 
-If you don't have macOS or want to use API billing instead, set `ANTHROPIC_API_KEY` before running `up` — the script prefers it over the Keychain path.
+`make run` resolves your auth in priority order (`ANTHROPIC_API_KEY` env → `CLAUDE_CODE_OAUTH_TOKEN` env → macOS Keychain), and if none of them have a token it auto-runs `claude /login`. Then it boots the substrate and `docker exec`s you in. From the container shell:
 
-### Fire a forecast
+```
+mneme forecast "Will Bitcoin trade above $200,000 on any day before 2026-12-31?"
+```
+
+That blocks until completion (~2-5 min) and prints the full structured belief — probability, raw + calibrated, evidence_for / evidence_against / open_questions. From the host (anywhere on PATH):
+
+```
+mneme last              # show the most recent program's belief
+mneme bench --n 20      # paired ForecastBench against the crowd
+mneme markets watch     # live Manifold pipeline
+mneme tickets predict   # design-as-forecast pass
+mneme down              # stop the substrate
+```
+
+If you'd rather use synapse directly:
 
 ```bash
-synapse -j -P 4456 -p '{
-  "program_id": "MY-Q-001",
-  "new_evidence": "Question: Will Bitcoin trade above $200,000 on any single day before 2026-12-31?\n\nForecast the probability the question resolves YES.",
-  "trials": 3,
-  "iterative_max_steps": 5,
-  "allowed_tools": ["WebSearch"]
-}' substrate forecast update
+synapse -P 4456 substrate forecast update \
+  --program-id MY-Q-001 \
+  --new-evidence "Will Bitcoin trade above \$200K by 2026-12-31?" \
+  --trials 3 \
+  --iterative-max-steps 5
+
+synapse -P 4456 substrate forecast resolve \
+  --program-id <id> \
+  --actual true
 ```
 
-You get back a `Started { program_id }` event immediately. The work runs in background. After ~2-5 minutes:
-
-```bash
-# read the artifact
-cat programs/<program_id>/artifact.json | jq
-```
-
-The artifact contains `probability`, `raw_probability` (pre-Platt), `evidence_for`, `evidence_against`, `open_questions`, `summary`, `confidence`, `n_trials`.
-
-### Resolve it later
-
-When you know the outcome:
-
-```bash
-synapse -P 4456 -p '{
-  "program_id": "<from above>",
-  "actual": false
-}' substrate forecast resolve
-```
-
-The calibration store at `programs/_calibration/` grows; the next forecast benefits from the tighter Platt fit.
-
-### Run the benchmark
-
-```bash
-# vendored data first (CC BY-SA 4.0 from forecastingresearch/forecastbench-datasets)
-mkdir -p programs/_benchmarks/forecastbench
-curl -L -o programs/_benchmarks/forecastbench/2024-07-21-llm.json \
-  https://raw.githubusercontent.com/forecastingresearch/forecastbench-datasets/main/datasets/question_sets/2024-07-21-llm.json
-curl -L -o programs/_benchmarks/forecastbench/2024-07-21_resolution_set.json \
-  https://raw.githubusercontent.com/forecastingresearch/forecastbench-datasets/main/datasets/resolution_sets/2024-07-21_resolution_set.json
-
-# n=20 paired vs crowd, ~10 min wall-clock
-python3 scripts/forecastbench_live_run.py \
-  --question-set programs/_benchmarks/forecastbench/2024-07-21-llm.json \
-  --resolution-set programs/_benchmarks/forecastbench/2024-07-21_resolution_set.json \
-  --n 20 --concurrency 4 --port 4456 --trials 2 --iterative-max-steps 5 \
-  --output programs/_benchmarks/runs/$(date +%Y%m%d-%H%M%S)-mybench/
-```
-
-### Watch live Manifold markets
-
-```bash
-# select 10 open binary markets, fire forecasts, log paired data
-python3 scripts/marketwatch_live.py --max-markets 10 --port 4456
-
-# resolution sweeper — finds resolved markets, feeds calibration
-python3 scripts/marketwatch_resolve.py --port 4456
-
-# cron-friendly: see scripts/marketwatch_README.md
-```
-
-### Forecast a software design decision
-
-```bash
-# 1. Add a `forecast:` block to a ticket's frontmatter:
-#    forecast:
-#      hypothesis: "Will refactor X reduce wall-clock by 20%?"
-#      resolution_method: "..."
-#      deadline: "2026-06-01T00:00:00Z"
-
-# 2. Fire its prediction (idempotent on repeat runs)
-python3 scripts/ticket_forecast.py --plans-dir ../mneme/plans
-
-# 3. Resolve when the deadline passes
-python3 scripts/ticket_resolve.py --plans-dir ../mneme/plans
-```
+Substrate's RPC is fire-and-return on `forecast.update`; `mneme forecast` is the wrapper that polls and prints the artifact when ready. See [`mneme-substrate/README.md`](https://github.com/hypermemetic/mneme-substrate#readme) for the full operator's guide.
 
 ## Architecture
 

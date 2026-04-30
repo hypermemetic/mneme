@@ -13,8 +13,8 @@ The recursion: the same machinery that forecasts events forecasts software desig
 | 003 | 20 | single-shot, λ=0.2, no calibration | 64.6 | 70.2 | −5.6 |
 | 004a | 20 | paper-aligned defaults (λ=0, Platt) | 68.6 | 70.2 | −1.6 |
 | 004b | 20 | + iterative loop on | 83.6 | 70.2 | **+13.4** |
-| 005 | 94 | full paper-aligned, n=94 | 84.1 | 70.2 | **+13.9** |
-| **006** | **58** | **held-out post-cutoff, freeze 2026-03-15** | **84.0** | **57.5** | **+26.5** |
+| 005 | 94 | full paper-aligned, n=94 | 84.1 | 57.5 | **+26.6** |
+| **006** | **58** | **held-out post-cutoff, freeze 2026-03-15** | **84.8** | **58.3** | **+26.5** |
 | **007** | **27** | **held-out post-cutoff, freeze 2026-03-29** | **71.4** | **11.0** | **+60.5** |
 
 Both held-out benches' 95% CIs on paired Brier delta exclude 0. Mneme decisively beats the ForecastBench crowd in this setup.

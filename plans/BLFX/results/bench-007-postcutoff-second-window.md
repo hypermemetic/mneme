@@ -29,8 +29,8 @@ Now that we have three runs, the trend is consistent:
 | bench | n | freeze date | resolution window | crowd BI | mneme BI | paired Δ BI |
 |---|---|---|---|---|---|---|
 | 003 (single-shot, λ=0.2, no Platt) | 20 | 2024-07-21 | 2024-Q3 | 70.2 | 64.6 | −5.6 |
-| 005 (iterative, paper-aligned) | 94 | 2024-07-21 | 2024-Q3-2026-Q1 | 70.2 | 84.1 | +26.6 |
-| **006 (held-out)** | 58 | 2026-03-15 | 2026-Q1-Q2 | not reported separately | 84.0 | **+26.5** |
+| 005 (iterative, paper-aligned) | 94 | 2024-07-21 | 2024-Q3-2026-Q1 | 57.5 | 84.1 | +26.6 |
+| **006 (held-out)** | 58 | 2026-03-15 | 2026-Q1-Q2 | 58.3 | 84.8 | **+26.5** |
 | **007 (held-out, second window)** | 27 | 2026-03-29 | 2026-04-08–29 | 11.0 | 71.4 | **+60.5** |
 
 The +26-60 BI delta range across both held-out windows is the

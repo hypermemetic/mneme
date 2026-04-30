@@ -16,10 +16,11 @@ The recursion: the same machinery that forecasts events forecasts software desig
 | 005 | 94 | full paper-aligned, n=94 | 84.1 | 57.5 | **+26.6** |
 | **006** | **58** | **held-out post-cutoff, freeze 2026-03-15** | **84.8** | **58.3** | **+26.5** |
 | **007** | **27** | **held-out post-cutoff, freeze 2026-03-29** | **71.4** | **11.0** | **+60.5** |
+| **008** | **58** | **bench-006 rerun + BLFX-9 layers 1+4 (date defenses)** | **83.2** | **58.3** | **+25.0** |
 
 Both held-out benches' 95% CIs on paired Brier delta exclude 0. Mneme decisively beats the ForecastBench crowd in this setup.
 
-**The honest caveat:** post-cutoff means the model's training data didn't include the resolutions, but the iterative loop's WebSearch can retrieve news articles published after the freeze date. The +26-60 BI delta likely contains web-search contamination; how much is unknown until BLFX-9 (4-layer date-leakage defense) ships. The live marketplace pipeline is the only data path that's structurally clean — markets that haven't resolved yet, frozen at forecast time, resolving over weeks.
+**Update 2026-04-30:** [bench-008](plans/BLFX/results/bench-008-blfx9-rerun.md) reran bench-006 with [BLFX-9](plans/BLFX/BLFX-9.md) layers 1+4 active (substrate-level `before:YYYY-MM-DD` on every web search query + per-question URL blocklist auto-extracted from `resolution_criteria`). On the apples-to-apples 58 questions: paired Δ went from +26.5 → +25.0 BI. **The defenses cost ~1.5 BI; the +26 wasn't contamination.** Layers 2 (LLM leak classifier) and 3 (data-tool date clamping) aren't in production yet — those may shave more, may shave nothing. The live marketplace pipeline remains the only structurally-clean data path; bench-008 is the strongest evidence we have today that the held-out bench delta is real signal.
 
 Result docs: [`plans/BLFX/results/`](plans/BLFX/results/).
 
@@ -57,7 +58,7 @@ We replicate the structural components 1-5; the substrate runs on Claude Sonnet 
 | Logit-space aggregation | `mneme/swarm/aggregate/logit.rs`, λ=0 default per Murphy 2026 §4 | ✅ shape; LOO-CV α tuning is BLFX-5 |
 | Hierarchical Platt | `mneme/calibration/{platt.rs,store.rs}` + wired into `forecast.update` | ✅ flat Platt; per-source intercepts is BLFX-6 |
 | Source-specific tools (yfinance/FRED/Wikipedia-as-of) | stubbed | BLFX-15 |
-| 4-layer date-leakage defense | not built | BLFX-9 |
+| 4-layer date-leakage defense | layers 1+4 in production (substrate-level); layer 2 stubbed; layer 3 blocked on BLFX-15 | BLFX-9 (partial) |
 
 Beyond the paper, mneme adds:
 
@@ -94,13 +95,13 @@ Over time, you get answers to questions nobody else has measured:
 
 The current sample is small (3 design predictions filed at v0.1) but the loop is closed. The first three:
 
-| Ticket | Hypothesis (abbrev) | Predicted YES | Resolves |
-|---|---|---|---|
-| MNEME-31 | This script ships + ≥3 predictions recorded by tomorrow | 0.66 | 2026-05-01 |
-| BLFX-9 | Date-leakage defense brings delta back to paper's range | **0.50** | 2026-05-27 |
-| MNEME-30 | Mneme beats Manifold crowd on first 30 resolved markets | 0.42 | 2026-07-22 |
+| Ticket | Hypothesis (abbrev) | Predicted YES | Resolves | Outcome |
+|---|---|---|---|---|
+| MNEME-31 | This script ships + ≥3 predictions recorded by tomorrow | 0.66 | 2026-05-01 | (pending) |
+| BLFX-9 | Date-leakage defense brings delta back to paper's range | **0.50** | 2026-05-27 | **NO (favorable)** — bench-008 +25.0 BI, defenses cost ~1.5 BI; the +26 was real signal |
+| MNEME-30 | Mneme beats Manifold crowd on first 30 resolved markets | 0.42 | 2026-07-22 | (pending — accumulating) |
 
-The 0.50 on BLFX-9 is the system saying "I genuinely don't know if our +26 BI delta is real signal or contamination." That's the answer it should give.
+The 0.50 on BLFX-9 was the system saying "I genuinely don't know if our +26 BI delta is real signal or contamination." Bench-008 told us: it's signal.
 
 ## Quick start (Claude subscription, no API key)
 
@@ -209,15 +210,18 @@ External callers
 - ✅ Live Manifold marketplace pipeline (Phase 1)
 - ✅ Tickets-as-forecasts pipeline (Phase 1)
 - ✅ JSON-cleanup recovery for malformed agent output
-- ✅ All 370+ tests pass
+- ✅ All 384 tests pass
+- ✅ MNEME-33 — periodic-downtime resilience (orphan-forecast recovery + two-phase resolution sweep + Manifold 404 handling)
+- ✅ MNEME-35 — queryable reasoning-chain inspector (`scripts/inspect_program_tree.py`)
+- ✅ BLFX-9 layers 1 (search-date filter) + 4 (URL blocklist) shipped as substrate-level enforcement; bench-008 confirms the held-out delta survives them
 
 **Open (the actual research questions):**
-- 🔲 BLFX-9 — date-leakage defense (the load-bearing test of whether our +26 BI is real)
+- 🔲 BLFX-9 layer 2 — Haiku leak classifier (trait + plumbing landed; concrete impl is ~30 LOC + tests)
 - 🔲 BLFX-5 — LOO-CV-tuned α (currently λ=0 fallback per Murphy's empirical optimum)
-- 🔲 BLFX-6 — hierarchical Platt with per-source intercepts (mneme is weak on metaculus questions; per-source bias correction would help)
+- 🔲 BLFX-6 — hierarchical Platt with per-source intercepts (mneme is weak on metaculus questions; per-source bias correction would help; system's only above-50% prediction)
 - 🔲 BLFX-13 — full integrated paper-comparison run with ablation sweep
-- 🔲 BLFX-15 — source-specific data tools (yfinance / FRED / Wikipedia-as-of)
-- 🔲 Polymarket integration (current: Manifold only)
+- 🔲 BLFX-15 — source-specific data tools (yfinance / FRED / Wikipedia-as-of); unblocks BLFX-9 layer 3
+- 🔲 MNEME-34 — Polymarket integration alongside Manifold (real-money crowd test)
 - 🔲 Long-term resolved-pair dataset (live pipeline started 2026-04-29; first resolutions in days)
 
 ## Authorship

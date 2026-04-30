@@ -1,7 +1,7 @@
 ---
 id: MNEME-29
 title: "LLM capability library + JSON-cleanup recovery on parse failures"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: [BLFX-14]

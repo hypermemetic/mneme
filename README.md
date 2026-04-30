@@ -107,49 +107,40 @@ The 0.50 on BLFX-9 is the system saying "I genuinely don't know if our +26 BI de
 You need:
 - macOS or Linux
 - Docker / Podman / Colima
-- A Claude subscription with the `claude` CLI installed (the run script will trigger `claude /login` automatically if you don't have an OAuth token yet)
+- A Claude subscription with the `claude` CLI installed (the run script auto-runs `claude /login` if no OAuth token is found)
+- [`synapse`](https://github.com/hypermemetic/synapse) on the host
 
 ```bash
 git clone git@github.com:hypermemetic/mneme.git
 git clone git@github.com:hypermemetic/mneme-substrate.git
 cd mneme-substrate
-
-make install         # symlink the `mneme` CLI to ~/.local/bin
-make build           # build the container (~3 min cold; ~30s incremental)
-make run             # start substrate detached + drop into the container shell
+make build           # ~3 min cold; ~30s incremental
+make run             # boot substrate, drop into container shell
 ```
 
-`make run` resolves your auth in priority order (`ANTHROPIC_API_KEY` env → `CLAUDE_CODE_OAUTH_TOKEN` env → macOS Keychain), and if none of them have a token it auto-runs `claude /login`. Then it boots the substrate and `docker exec`s you in. From the container shell:
+`make run` resolves your auth in priority order (`ANTHROPIC_API_KEY` env → `CLAUDE_CODE_OAUTH_TOKEN` env → macOS Keychain). If none have a token, it auto-runs `claude /login`. Then `docker exec`s you into the container.
 
-```
-mneme forecast "Will Bitcoin trade above $200,000 on any day before 2026-12-31?"
-```
-
-That blocks until completion (~2-5 min) and prints the full structured belief — probability, raw + calibrated, evidence_for / evidence_against / open_questions. From the host (anywhere on PATH):
-
-```
-mneme last              # show the most recent program's belief
-mneme bench --n 20      # paired ForecastBench against the crowd
-mneme markets watch     # live Manifold pipeline
-mneme tickets predict   # design-as-forecast pass
-mneme down              # stop the substrate
-```
-
-If you'd rather use synapse directly:
+The substrate is fire-and-return at the protocol level. Pipe `forecast.update` into `programs.wait` for block-and-print:
 
 ```bash
-synapse -P 4456 substrate forecast update \
-  --program-id MY-Q-001 \
-  --new-evidence "Will Bitcoin trade above \$200K by 2026-12-31?" \
-  --trials 3 \
-  --iterative-max-steps 5
+PID=$(synapse -P 4456 substrate forecast update \
+        --program-id MY-Q \
+        --new-evidence "Will Bitcoin trade above \$200,000 on any day before 2026-12-31?" \
+        --trials 3 --iterative-max-steps 5 \
+      | jq -r 'select(.content.type == "started") | .content.program_id')
 
-synapse -P 4456 substrate forecast resolve \
-  --program-id <id> \
-  --actual true
+synapse -P 4456 substrate programs wait --program-id "$PID"
 ```
 
-Substrate's RPC is fire-and-return on `forecast.update`; `mneme forecast` is the wrapper that polls and prints the artifact when ready. See [`mneme-substrate/README.md`](https://github.com/hypermemetic/mneme-substrate#readme) for the full operator's guide.
+That streams `progress` events while the substrate works and ends with a terminal `completed` event carrying the artifact. Synapse renders it natively.
+
+To resolve when you know the outcome:
+
+```bash
+synapse -P 4456 substrate forecast resolve --program-id <id> --actual true
+```
+
+Once you have ≥10 resolutions, Platt calibration kicks in. See [`mneme-substrate/README.md`](https://github.com/hypermemetic/mneme-substrate#readme) for the full operator's guide — bench runs, live Manifold pipeline, ticket-as-forecast, container internals.
 
 ## Architecture
 

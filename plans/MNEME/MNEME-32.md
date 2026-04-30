@@ -1,7 +1,7 @@
 ---
 id: MNEME-32
 title: "programs.wait — substrate-level block-and-stream for fire-and-return programs"
-status: Ready
+status: Complete
 type: implementation
 blocked_by: []
 unlocks: []

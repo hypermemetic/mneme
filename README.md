@@ -120,19 +120,31 @@ make run             # boot substrate, drop into container shell
 
 `make run` resolves your auth in priority order (`ANTHROPIC_API_KEY` env → `CLAUDE_CODE_OAUTH_TOKEN` env → macOS Keychain). If none have a token, it auto-runs `claude /login`. Then `docker exec`s you into the container.
 
-The substrate is fire-and-return at the protocol level. Pipe `forecast.update` into `programs.wait` for block-and-print:
+The substrate is fire-and-return at the protocol level. Two commands:
 
 ```bash
-PID=$(synapse -P 4456 substrate forecast update \
-        --program-id MY-Q \
-        --new-evidence "Will Bitcoin trade above \$200,000 on any day before 2026-12-31?" \
-        --trials 3 --iterative-max-steps 5 \
-      | jq -r 'select(.content.type == "started") | .content.program_id')
+$ synapse -P 4456 substrate forecast update \
+    --program-id MY-Q \
+    --new-evidence "Will Bitcoin trade above \$200,000 on any day before 2026-12-31?" \
+    --trials 3 --iterative-max-steps 5
 
-synapse -P 4456 substrate programs wait --program-id "$PID"
+prior: ...
+program_id: 7fbbf382-accd-4926-8a2b-b9e6d68df59d   ← copy this
+type: started
+
+$ synapse -P 4456 substrate programs wait \
+    --program-id 7fbbf382-accd-4926-8a2b-b9e6d68df59d
+
+type: progress  status: running    age_ms: 0
+type: progress  status: completed  age_ms: 60116
+type: completed
+artifact:
+  probability: 0.140
+  evidence_for: ...
+  evidence_against: ...
 ```
 
-That streams `progress` events while the substrate works and ends with a terminal `completed` event carrying the artifact. Synapse renders it natively.
+Synapse renders the streaming events natively.
 
 To resolve when you know the outcome:
 

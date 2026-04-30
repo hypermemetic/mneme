@@ -110,17 +110,49 @@ MVP of layers 1 + 4 with substrate-level enforcement landed:
 
 **Deferred (still Ready):**
 
-- Layer 2 production impl: a `HaikuLeakClassifier` that uses the
-  capability registry. Trait + plumbing are ready; just needs a
-  concrete implementor + tests. (~30 LOC + 2 tests.)
 - Layer 3: `FetchTimeSeries` / `FetchWikipediaSection` are still
   stubbed actions throughout the codebase, so date clamping has no
   surface to attach to yet. Wait until BLFX-15 (source tools) lands.
 - Audit test: criterion #5 (run on 10 known backtest questions and
   manually inspect for leakage). Multi-hour LLM run; defer until
   bench window is allocated.
-- Re-run bench-006 with `cutoff_date` set on every question and see
-  how much of the +26 BI delta survives — this is the actual
-  hypothesis the ticket's `forecast:` block is forecasting.
 
-Status remains `Ready` until the audit + bench rerun close the loop.
+## Layer 2 update — 2026-04-30
+
+Shipped `HaikuLeakClassifier` (substrate-side):
+
+- `mneme/capabilities/mod.rs` registers a new `leak_classifier`
+  capability (Haiku-tier, 32 max_tokens) so the registry has a
+  semantic name for "is this hit post-cutoff?" calls.
+- `mneme/runtime/haiku_leak_classifier.rs` implements the
+  `LeakClassifier` trait: builds a tight prompt from the
+  `(SearchHit, cutoff)` pair, invokes the registry's
+  `leak_classifier` capability, parses YES/NO. 6 unit tests cover
+  parser leniency, prompt construction, and unknown-published_at
+  fallback.
+- `ClaudecodeStepDriver::new_with_env` auto-attaches the classifier
+  when `cutoff_date` is set but the operator didn't supply one.
+  Production forecasting (no cutoff) keeps the classifier inert at
+  zero cost.
+
+Failure modes are conservative: capability errors and unparseable
+responses default to NOT-leaked. Layer 1 already filtered the query;
+layer 2's job is catching what slipped through, not blanket-pruning
+on transient errors.
+
+`cargo test --lib`: **391 passing** (was 384 pre-layer-2; +7 tests).
+
+## Outcome of BLFX-9 forecast block
+
+`resolved: NO (favorable)` — bench-008 paired Δ +24.98 BI on the
+apples-to-apples 58 questions, well outside the [-6, +14] band.
+Bench-006's +26 BI win is real signal, not contamination. Layers 1+4
+cost ~1.5 BI; layer 2's marginal effect is unmeasured (next bench
+will tell us).
+
+See `plans/BLFX/results/bench-008-blfx9-rerun.md` for the full
+score.
+
+Status remains `Ready` until the audit test + a bench-009 rerun
+with all three production layers (1+2+4) close the loop. The forecast
+block is already resolved.
